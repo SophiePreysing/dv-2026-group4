@@ -13,6 +13,7 @@
 **Group members:**
 
 - Sophie Preysing
+- Sander van Nieuwenhuijzen
 
 **Research question:** One sentence stating what you're investigating.
 
