@@ -8,7 +8,7 @@
   first time.
 -->
 
-# Your Project Title
+# Test Results and Secondary-School Advice in Dutch Primary Schools
 
 **Group members:**
 
@@ -16,13 +16,13 @@
 - Sander van Nieuwenhuijzen
 - Natasha Medved
 
-**Research question:** One sentence stating what you're investigating.
+**Research question:** RQ3. Do schools with similar test results give similar secondary-school advice?
 
-**Level:** Analytics / Inference / Prediction 
+**Level:** Inference
 
 ## About this project
 
-A short paragraph (3-5 sentences) on what this project looks at in the DUO doorstroomtoets (transfer test) data, and what you're trying to communicate with your final visualization.
+This project uses DUO's 2024–2025 doorstroomtoets data to examine how closely the secondary-school advice that primary schools give their groep 8 pupils matches those pupils' test results. For each school, we compare the proportion of pupils receiving XYZ advice (TBC) to the proportion reaching the higher reference levels in maths (1S) and reading (2F). We then test whether this relationship depends on the school's schoolweging, the Education Inspectorate's measure of how disadvantaged its pupil population is. With our final visualization, we want to show whether two schools with similar test results give similar advice regardless of who their pupils are, or whether schools with more disadvantaged populations systematically advise lower tracks. Answering this speaks directly to the current public debate about fairness in the transition to secondary education.
 
 ## Cloning this project
 
