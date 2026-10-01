@@ -14,6 +14,7 @@
 
 - Sophie Preysing
 - Sander van Nieuwenhuijzen
+- Natasha Medved
 
 **Research question:** One sentence stating what you're investigating.
 
