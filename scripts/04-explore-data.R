@@ -114,14 +114,88 @@ plot_1
 
 
 # =============================================================================
-# PLOT 2 - <TOPIC> (Sophie) ----------------------------------------------------
+# PLOT 2 - Test results by school disadvantage, per subject (Sophie) ----------------------------------------------------
 # =============================================================================
-#
-# <one or two lines: what does this plot look at, and why?>
 
-# plot_3 <- ggplot(school_rq3, aes(...)) +
-#   ... +
-#   theme_explore
+# Data Preparation:
+
+school_rq3 <- readRDS(here::here("data", "processed", "school_rq3.rds"))
+
+school_rq3_long <- school_rq3 |>
+  rename(
+    "Maths (1S)" = "pct_maths_1s",
+    "Reading (2F)" = "pct_reading_2f",
+    "Language (2F)" = "pct_language_2f"
+  ) |>
+  pivot_longer(
+    c("Maths (1S)", "Reading (2F)", "Language (2F)"),
+    names_to = "subject",
+    values_to = "test_score"
+  )
+
+# Extreme scores only:
+extreme_scores <- school_rq3_long |>
+  filter(test_score %in% c(0, 100))
+
+# Median number of students extreme vs all scores:
+extreme_scores |> summarise(median_students = median(n_maths)) #9.5 students
+school_rq3 |> summarise(median_students = median(n_maths)) #25 students
+
+# Correlation between subjects:
+school_rq3 |>
+  filter(n_maths >= 20) |>
+  select(pct_maths_1s, pct_reading_2f, pct_language_2f) |>
+  cor(use = "complete.obs")
+
+
+# Exploratory Plot:
+
+# Plot trend line with Loess method: draws a flexible curved line,
+# can show whether the relationship is straight or bends somewhere.
+
+# All three subjects decline with schoolweging and follow similar trends.
+# They correlate moderately between schools (r = 0.57-0.68), so we combine
+# them into one average score. The large spread shows that schools with the
+# same schoolweging differ widely in results. The extreme values of 0% and
+# 100% (black circles) mostly come from small schools, where one or two
+# students change the percentage a lot. Their percentages are therefore
+# unreliable and add noise. We will set a minimum school size, so that the
+# analysis is based on schools whose results reflect more than chance.
+
+plot_2 <- school_rq3_long |>
+  filter(!is.na(schoolweging)) |>
+  ggplot(aes(x = schoolweging, y = test_score, colour = subject)) +
+  geom_point(alpha = 0.08, size = 0.6) +
+  geom_point(
+    data = extreme_scores,
+    shape = 21,
+    colour = "black",
+    size = 1.5,
+    alpha = 0.5
+  ) +
+  geom_smooth(method = "loess", formula = y ~ x, linewidth = 1.2) +
+  annotate(
+    "text",
+    x = 40, y = 106,
+    label = "Black circles: 0% or 100%, mostly small schools",
+    hjust = 1, size = 3.5
+  ) +
+  scale_colour_manual(
+    values = c(
+      "Maths (1S)" = "#E69F00",
+      "Reading (2F)" = "#0072B2",
+      "Language (2F)" = "#009E73"
+    )
+  ) +
+  labs(
+    x = "Schoolweging (higher = more disadvantaged)",
+    y = "% of students reaching target level",
+    colour = "Subject"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top", panel.grid.minor = element_blank())
+
+plot_2
 
 # =============================================================================
 # PLOT 3 - <TOPIC> (Sander) ----------------------------------------------------
