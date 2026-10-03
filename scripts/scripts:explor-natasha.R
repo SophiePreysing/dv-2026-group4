@@ -2,7 +2,6 @@ source("scripts/00-packages.R")
 source("scripts/01-get-data.R")
 
 
-
 # ---- 1. schooladviezen: how many pupils nationally got each advice -----------
 
 advice_cols <- c(
