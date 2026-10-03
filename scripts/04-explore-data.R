@@ -60,15 +60,9 @@ theme_explore <- theme_minimal(base_size = 11) +
 # as a robustness check if we want).
 fit_tests <- lm(avg_advice ~ pct_maths_1s + pct_reading_2f, data = school_rq3)
 
-# school names, for labelling the highlighted schools
-school_names <- schooladviezen |>
-  distinct(INSTELLINGSCODE, .keep_all = TRUE) |>
-  select(INSTELLINGSCODE, school_name = INSTELLINGSNAAM_VESTIGING)
-
 # advice gap = actual advice - expected advice (the model's residual)
 explore_gap <- school_rq3 |>
-  mutate(advice_gap = residuals(fit_tests)) |>
-  left_join(school_names, by = "INSTELLINGSCODE")
+  mutate(advice_gap = residuals(fit_tests))
 
 # ---- 1b. schools to highlight ----
 
@@ -125,10 +119,9 @@ plot_1
 #
 # <one or two lines: what does this plot look at, and why?>
 
-# plot_2 <- ggplot(school_rq3, aes(...)) +
+# plot_3 <- ggplot(school_rq3, aes(...)) +
 #   ... +
 #   theme_explore
-
 
 # =============================================================================
 # PLOT 3 - <TOPIC> (Sander) ----------------------------------------------------
