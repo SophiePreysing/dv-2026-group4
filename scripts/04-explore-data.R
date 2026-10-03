@@ -58,7 +58,7 @@ theme_explore <- theme_minimal(base_size = 11) +
 # test results = % reaching the higher target level (1S maths, 2F reading),
 # as the brief suggests; % below 1F is ignored here (we can add this in Part 2
 # as a robustness check if we want).
-fit_tests <- lm(avg_advice ~ pct_maths_1s + pct_reading_2f, data = school_rq3)
+fit_tests <- lm(avg_advice ~ pct_maths_1s + pct_reading_2f + pct_language_2f, data = school_rq3)
 
 # advice gap = actual advice - expected advice (the model's residual)
 explore_gap <- school_rq3 |>
