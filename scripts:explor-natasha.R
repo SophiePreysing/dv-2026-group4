@@ -24,6 +24,71 @@ schooladviezen |>
   labs(x = NULL, y = "Number of pupils", title = "School advice, 2024-2025") +
   theme_minimal()
 
+# ---- 1. schooladviezen: how many pupils nationally got each advice (SANDER) -----------
+
+# Scores for regular secondary-school advice
+advice_score <- c(
+  PRO = 1,
+  VMBO_B = 2,
+  VMBO_B_K = 3,
+  VMBO_K = 4,
+  VMBO_K_GT = 5,
+  VMBO_GT = 6,
+  VMBO_GT_HAVO = 7,
+  HAVO = 8,
+  HAVO_VWO = 9,
+  VWO = 10
+)
+
+mean_advice_school <- schooladviezen |>
+  pivot_longer(
+    cols = all_of(names(advice_score)),
+    names_to = "advice",
+    values_to = "n"
+  ) |>
+  mutate(
+    n = suppressWarnings(as.numeric(n)),
+    advice_score = unname(advice_score[advice])
+  ) |>
+  filter(!is.na(n), !is.na(advice_score)) |>
+  group_by(INSTELLINGSCODE) |>  # Replace school_id with your school's identifier column
+  summarise(
+    mean_advice = weighted.mean(advice_score, w = n),
+    total_pupils = sum(n),
+    .groups = "drop"
+  )
+
+ggplot(mean_advice_school, aes(mean_advice)) +
+  geom_histogram(
+    binwidth = 0.25,
+    boundary = 0,
+    fill = "#4C92D8",
+    colour = "white"
+  ) +
+  scale_x_continuous(
+    breaks = 1:10,
+    labels = c(
+      "PRO", "VMBO-B", "B/K", "VMBO-K", "K/GT",
+      "VMBO-GT", "GT/HAVO", "HAVO", "HAVO/VWO", "VWO"
+    )
+  ) +
+  labs(
+    x = "Mean secondary-school advice per school",
+    y = "Number of schools",
+    title = "Distribution of mean secondary-school advice across schools"
+  ) +
+  theme_bw()
+
+# X represents the advices schools can give
+# Y represents the number of school whose mean advice corresponds to the x axis
+# For example the peak around the HAVO advice tells us that almost 500 schools
+# in the Netherlands have HAVO as their mean advice
+
+# We see a right skew in the data, meaning that schools in Netherlands tend to have a mean advice
+# of HAVO
+
+### RECREATE PLOT FOR ADVICES ON SCALE 1-6, SEES WHAT LOOKS BETETR
+
 # ---- 2. referentieniveaus: national totals per subject and level -------------
 
 ref_cols <- c(
@@ -61,6 +126,32 @@ referentieniveaus |>
     title = "Reference levels reached, 2024-2025"
   ) +
   theme_minimal()
+
+col(referentieniveaus)
+ls(referentieniveaus)
+
+x1 <- referentieniveaus |>
+  summarise(
+    across(
+      c(LV_1F, LV_2F, LV_LAGER1F,
+        REKENEN_1F, REKENEN_1S, REKENEN_2F, REKENEN_LAGER1F,
+        TV_1F, TV_2F, TV_LAGER1F),
+      list(
+        min = ~ min(.x, na.rm = TRUE),
+        mean = ~ mean(.x, na.rm = TRUE),
+        max = ~ max(.x, na.rm = TRUE),
+        missing = ~ sum(is.na(.x))
+      )
+    )
+  )
+
+level_vars <- c(
+  "LV_1F", "LV_2F", "LV_LAGER1F",
+  "REKENEN_1F", "REKENEN_1S", "REKENEN_2F", "REKENEN_LAGER1F",
+  "TV_1F", "TV_2F", "TV_LAGER1F"
+)
+
+
 
 # ---- 3. schoolweging: how the scores are spread across schools ---------------
 
