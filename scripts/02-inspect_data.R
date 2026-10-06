@@ -1,4 +1,4 @@
-# inspect-data.R
+# 02-inspect-data.R
 #
 # Step 1 of the data processing: open every dataset and get a quick overview.
 # Nothing is changed here - this script only LOOKS at the raw data.
