@@ -84,12 +84,12 @@ highlight_gap <- explore_gap |>
 
 plot_1 <- ggplot(explore_gap, aes(schoolweging, advice_gap)) +
   geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") +
-  geom_point(alpha = 0.2, size = 1, colour = "grey40") +
+  geom_point(alpha = 0.15, size = 1, colour = "grey40") +
   geom_smooth(
     method = "loess", formula = y ~ x,
-    colour = trend_colour, linewidth = 1.2
+    colour = trend_colour, linewidth = 1.2, se=TRUE
   ) +
-  geom_point(data = highlight_gap, colour = highlight_colour, size = 3) +
+  geom_point(data = highlight_gap, colour = "white", size = 3) +
   geom_text(
     data = highlight_gap,
     aes(label = label, hjust = label_hjust),
@@ -102,13 +102,108 @@ plot_1 <- ggplot(explore_gap, aes(schoolweging, advice_gap)) +
     ),
     subtitle = paste(
       "Advice gap = actual average advice minus advice expected",
-      "from test results (first, simplified look)"
+      "from test results"
     ),
-    x = "School weighting (higher = more disadvantaged pupils)",
-    y = "Advice gap (tracks)",
+    x = "Schoolweging (higher = more disadvantaged)",
+    y = "Advice gap (tracks above/below prediction)",
     caption = "Above 0: advises higher than predicted. Below 0: lower."
   ) +
-  theme_explore
+  theme_explore +
+  theme(
+    plot.title         = element_text(face = "bold", size = 13),
+    plot.subtitle      = element_text(colour = "grey35", size = 11,
+                                      margin = margin(b = 12)),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.title.x       = element_text(margin = margin(t = 10)),
+    axis.title.y       = element_text(margin = margin(r = 10)),
+    plot.caption       = element_text(hjust = 0, colour = "grey40", size = 9,
+                                      lineheight = 1.15, margin = margin(t = 14)),
+    plot.margin        = margin(14, 18, 14, 14)
+  )
+
+
+plot_1
+
+plot_1 <- ggplot(explore_gap, aes(schoolweging, advice_gap)) +
+  # Zero line -> linetype legend
+  geom_hline(aes(yintercept = 0, linetype = "No gap (advice = prediction)"),
+             colour = "grey50") +
+  geom_point(alpha = 0.15,
+             size = 1,
+             colour = "grey40") +
+  # Trend + confidence band -> colour/fill legend
+  geom_smooth(
+    aes(colour = "Smoothed trend (95% CI)", fill   = "Smoothed trend (95% CI)"),
+    method = "loess",
+    formula = y ~ x,
+    linewidth = 1.2,
+    alpha = 0.15,
+    se = TRUE
+  ) +
+  # Highlighted schools -> shape legend
+  geom_point(
+    data = highlight_gap,
+    aes(shape = "Largest gaps (20+ advised pupils)"),
+    fill = highlight_colour,
+    colour = "white",
+    stroke = 0.7,
+    size = 3.2
+  ) +
+  geom_text(
+    data = highlight_gap,
+    aes(label = label, hjust = label_hjust),
+    colour = highlight_colour,
+    size = 3,
+    lineheight = 0.9
+  ) +
+  scale_linetype_manual(name = NULL,
+                        values = c("No gap (advice = prediction)" = "dashed")) +
+  scale_colour_manual(name = NULL,
+                      values = c("Smoothed trend (95% CI)" = trend_colour)) +
+  scale_fill_manual(name = NULL,
+                    values = c("Smoothed trend (95% CI)" = trend_colour)) +
+  scale_shape_manual(name = NULL,
+                     values = c("Largest gaps (20+ advised pupils)" = 21)) +
+  labs(
+    title = paste(
+      "Do schools advise higher or lower",
+      "than their test results predict?"
+    ),
+    subtitle = paste(
+      "Advice gap = actual average advice minus advice expected",
+      "from test results"
+    ),
+    x = "Schoolweging (higher = more disadvantaged)",
+    y = "Advice gap (tracks above/below prediction)",
+    caption = "Advice gap above 0: advises higher than predicted. Below 0: lower."
+  ) +
+  theme_explore +
+  theme(
+    plot.title         = element_text(face = "bold", size = 13),
+    plot.subtitle      = element_text(
+      colour = "grey35",
+      size = 11,
+      margin = margin(b = 12)
+    ),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.title.x       = element_text(margin = margin(t = 10)),
+    axis.title.y       = element_text(margin = margin(r = 10)),
+    plot.caption       = element_text(
+      hjust = 0,
+      colour = "grey40",
+      size = 9,
+      lineheight = 1.15,
+      margin = margin(t = 14)
+    ),
+    plot.margin        = margin(14, 18, 14, 14),
+    # legend styling
+    legend.position      = "top",
+    legend.justification = "left",
+    legend.text          = element_text(size = 8),
+    legend.key.width     = unit(0.5, "cm")
+  )
 
 plot_1
 
@@ -162,38 +257,79 @@ school_rq3 |>
 # unreliable and add noise. We will set a minimum school size, so that the
 # analysis is based on schools whose results reflect more than chance.
 
+
+subject_colours <- c(
+  "Maths (1S)"    = "#E69F00",
+  "Reading (2F)" = "#0072B2",
+  "Language (2F)" = "#009E73"
+)
+
 plot_2 <- school_rq3_long |>
-  filter(!is.na(schoolweging)) |>
+  filter(!is.na(schoolweging), !is.na(test_score)) |>
   ggplot(aes(x = schoolweging, y = test_score, colour = subject)) +
-  geom_point(alpha = 0.08, size = 0.6) +
+  # Background observations
+  geom_point(alpha = 0.06, size = 0.7) +
+  
+  # Highlight schools with extreme percentages
   geom_point(
-    data = extreme_scores,
+    data = extreme_scores |>
+      filter(!is.na(schoolweging), !is.na(test_score)),
     shape = 21,
-    colour = "black",
-    size = 1.5,
-    alpha = 0.5
+    fill = NA,
+    colour = "grey25",
+    stroke = 0.35,
+    size = 1.6,
+    alpha = 0.4,
+    show.legend = FALSE
   ) +
-  geom_smooth(method = "loess", formula = y ~ x, linewidth = 1.2) +
-  annotate(
-    "text",
-    x = 40, y = 106,
-    label = "Black circles: 0% or 100%, mostly small schools",
-    hjust = 1, size = 3.5
+  # Emphasise the trends
+  geom_smooth(
+    method = "loess",
+    formula = y ~ x,
+    se = FALSE,
+    linewidth = 1.3
   ) +
-  scale_colour_manual(
-    values = c(
-      "Maths (1S)" = "#E69F00",
-      "Reading (2F)" = "#0072B2",
-      "Language (2F)" = "#009E73"
+  scale_colour_manual(values = subject_colours) +
+  scale_y_continuous(
+    breaks = seq(0, 100, 20),
+    labels = function(x)
+      paste0(x, "%")
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    title = "Attainment and school disadvantage",
+    subtitle = "Higher schoolweging indicates a more disadvantaged student population",
+    x = "Schoolweging",
+    y = "% of students reaching target level",
+    colour = NULL,
+    caption = paste(
+      "Lines: LOESS trends | Each point represents a school–subject observation.",
+      "Black circles: 0% or 100% attainment.",
+      sep = "\n"
     )
   ) +
-  labs(
-    x = "Schoolweging (higher = more disadvantaged)",
-    y = "% of students reaching target level",
-    colour = "Subject"
-  ) +
+  
   theme_minimal(base_size = 12) +
-  theme(legend.position = "top", panel.grid.minor = element_blank())
+  theme(
+    plot.title = element_text(face = "bold", size = 15),
+    plot.subtitle = element_text(colour = "grey35", margin = margin(b = 12)),
+    legend.position = "top",
+    legend.justification = "left",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(colour = "grey90", linewidth = 0.3),
+    axis.title = element_text(colour = "grey25"),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    plot.caption = element_text(
+      hjust = 0,
+      colour = "grey40",
+      size = 9,
+      margin = margin(t = 12)
+    ),
+    plot.margin = margin(12, 16, 12, 12)
+  ) +
+  guides(colour = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
 plot_2
 
@@ -207,38 +343,79 @@ plot_2
 # median schoolweging. A relative higher value for schoolweging means a relative
 # higher school disadvantage level. 
 
-
 provider_colours <- c(
-  "ROUTE8" = "#D9673A",
-  "LIB" = "#3E6FD0",
-  "IEP" = "#CD1076",
-  "AMN" = "#F4A261",
-  "DOA" = "#457B9D",
-  "DOE" = "#6A994E"
+  "ROUTE8" = "#E69F00",  # orange
+  "LIB"    = "#56B4E9",  # sky blue
+  "IEP"    = "#CC79A7",  # reddish purple
+  "AMN"    = "#D55E00",  # vermillion
+  "DIA"    = "#0072B2",  # blue
+  "DOE"    = "#009E73"   # bluish green
 )
 
-plot_3 <- ggplot(school_rq3, aes(
-  x = reorder(provider, schoolweging, FUN = median),
-  y = schoolweging,
-  fill = provider
-)) +
-  geom_boxplot(alpha=0.5,
-               outlier.shape=NA) +
+
+
+# national median reference
+nat_median <- median(school_rq3$schoolweging, na.rm = TRUE)
+
+# n labels per provider for x-axis
+provider_n <- school_rq3 |>
+  count(provider) |>
+  mutate(label = paste0(provider, "\n(n=", n, ")"))
+
+school_rq3 <- school_rq3 |>
+  left_join(provider_n, by = "provider")
+
+plot_3 <- ggplot(school_rq3,
+                 aes(
+                   x    = reorder(provider, schoolweging, FUN = median),
+                   y    = schoolweging,
+                   fill = provider,
+                   colour = provider
+                 )) +
+  geom_hline(
+    aes(yintercept = nat_median, linetype = "National median"),
+    colour = "grey40",
+    linewidth = 0.5
+  ) +
+  geom_violin(alpha = 0.3, linewidth = 0) + # shows full distribution of each provider
+  geom_boxplot(
+    aes(linetype = "Provider median"),
+    alpha = 0.8,
+    width = 0.3,
+    outlier.shape = NA,
+    colour = "grey20",
+    linewidth = 0.6,
+    key_glyph = "path"
+  ) +
+  scale_linetype_manual(
+    name   = NULL,
+    values = c("National median" = "dashed", "Provider median" = "solid"),
+    guide  = guide_legend(override.aes = list(
+      colour = "grey40", linewidth = 0.5
+    ))
+  )  +
   scale_fill_manual(values = provider_colours) +
   scale_colour_manual(values = provider_colours) +
+  scale_x_discrete(labels = setNames(provider_n$label, provider_n$provider)) +
+  # add sample size to variables
+  guides(fill = "none", colour = "none") +
   labs(
-    title = "School disadvantage by primary test provider",
-    subtitle = "Higher schoolweging indicates a more disadvantaged student population",
-    x = "Primary test provider",
-    y = "Schoolweging"
+    title    = "School disadvantage by primary test provider",
+    subtitle = "Higher schoolweging indicates a more disadvantaged
+    student population",
+    x        = NULL,
+    y        = "Schoolweging"
   ) +
+  theme_explore +
   theme(
-    plot.title = element_text(face = "bold"),
-    axis.text.x = element_text(angle = 0, hjust = 0.5)
-  ) +
-  theme_explore
+    plot.title    = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 11),
+    axis.text     = element_text(size = 11),
+    axis.title.y  = element_text(size = 12)
+  )
 
 plot_3
+
 
 # =============================================================================
 # COMBINE ALL PLOTS -----------------------------------------------------------
