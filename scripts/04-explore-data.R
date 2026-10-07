@@ -55,7 +55,7 @@ theme_explore <- theme_minimal(base_size = 11) +
 # ---- 1a. compute the advice gap ----
 
 # expected advice from test results only (schoolweging left out on purpose)
-# test results = % reaching the higher target level (1S maths, 2F reading),
+# test results = % reaching the higher target level (1S maths, 2F reading, 2F language),
 # as the brief suggests; % below 1F is ignored here (we can add this in Part 2
 # as a robustness check if we want).
 fit_tests <- lm(avg_advice ~ pct_maths_1s + pct_reading_2f + pct_language_2f, data = school_rq3)
@@ -102,7 +102,11 @@ plot_1 <- ggplot(explore_gap, aes(schoolweging, advice_gap)) +
     ),
     subtitle = paste(
       "Advice gap = actual average advice minus advice expected",
+<<<<<<< HEAD
       "from test results"
+=======
+      "\nfrom test results (first, simplified look)"
+>>>>>>> 646691e8d0986a4367b77eb757b4ea9d94588701
     ),
     x = "Schoolweging (higher = more disadvantaged)",
     y = "Advice gap (tracks above/below prediction)",
