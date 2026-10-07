@@ -196,6 +196,12 @@ final_plot <- ggplot() +
     ),
     alpha = 0.25
   ) +
+  # Dark outline under each line
+  geom_line(                        
+    data = pred_grid,
+    aes(x = score, y = fit, group = schoolweging),
+    colour = "grey20", linewidth = 2
+  ) +
   # Model-predicted lines at the 10th, 50th and 90th percentile
   geom_line(
     data = pred_grid,
