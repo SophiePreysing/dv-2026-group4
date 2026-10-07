@@ -338,14 +338,22 @@ plot_2 <- school_rq3_long |>
 plot_2
 
 # =============================================================================
-# PLOT 3 - <TOPIC> (Sander) ----------------------------------------------------
+# PLOT 3 - <School disadvantage per provider, compared> (Sander) 
 # =============================================================================
 #
-# <one or two lines: what does this plot look at, and why?>
-# Plot 3 plots providers measured by schoolweging in a boxplot. It orders the
-# test providers to be arranged from lowest median schoolweging to highest
-# median schoolweging. A relative higher value for schoolweging means a relative
-# higher school disadvantage level. 
+# Plot 3 shows the distribution of schoolweging per provider, ordered from
+# lowest median to highest median. A higher schoolweging indicates a more 
+# disadvantaged student population. 
+# The distributions of providers overlap substantially, and providers medians 
+# are close to national median. Thus, provider groups seem generally comparable
+# across school disadvantage. 
+# This suggest that providers are fairly similar in school disadvantage
+# Differences in test results across providers may thus be a result from the
+# structure of the test itself, not from school disadvantage. 
+# It is important to keep in mind that this plot is a comparability check,
+# not a result. 
+
+
 
 provider_colours <- c(
   "ROUTE8" = "#E69F00",  # orange
@@ -421,6 +429,109 @@ plot_3 <- ggplot(school_rq3,
 plot_3
 
 
+################
+# Plot 4: providers compared against test result
+################
+
+# In this visualization we plot the percentage of students reaching target level,
+# by test provider. The plot shows small differences across providers.
+# LIB has the highest percentage of students reaching target level, DOE, DIA and
+# ROUTE8 have the lowest.
+# All providers sit close to the national median line.
+# LIB and IEP have a substantially higher sample size than most others, so 
+# national median line is mostly made up from data size from these providers.
+# This plot suggests that difference in test used is weakly related to students reaching
+# target level. Thus, keeping provider as a control variable seems fruitful.
+# We will later do statistical tests to confirm the role of provider as a control variable.
+
+# National median per subject (for the dashed reference line)
+nat_median_all <- median(school_rq3_long$test_score, na.rm = TRUE)
+
+plot_4 <- ggplot(school_rq3_long, aes(x = provider, y = test_score, fill = provider)) +
+  
+  # National median
+  geom_hline(
+    aes(yintercept = nat_median_all, linetype = "National median"),
+    colour = "grey40",
+    linewidth = 0.5
+  ) +
+  
+  # Full distribution
+  geom_violin(alpha = 0.3,
+              linewidth = 0,
+              colour = NA) +
+  
+  # Median and quartiles
+  geom_boxplot(
+    aes(linetype = "Provider median"),
+    alpha = 0.8,
+    width = 0.3,
+    outlier.shape = NA,
+    colour = "grey20",
+    linewidth = 0.6,
+    key_glyph = "path"
+  ) +
+  scale_fill_manual(values = provider_colours) +
+  scale_linetype_manual(
+    name = NULL,
+    values = c("Provider median" = "solid", "National median" = "dashed"),
+    breaks = c("Provider median", "National median"),
+    guide = guide_legend(
+      override.aes = list(
+        colour = "grey20",
+        linewidth = 0.6,
+        alpha = 1,
+        fill = NA
+      )
+    )
+  ) +
+  scale_x_discrete(labels = setNames(provider_n$label, provider_n$provider)) +
+  scale_y_continuous(
+    breaks = seq(0, 100, 20),
+    labels = function(x)
+      paste0(x, "%")
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  guides(fill = "none") +
+  
+  labs(
+    title    = "Share of students reaching the target level, by test provider",
+    subtitle = "Each observation is a school, and pooled score of math, language and reading ",
+    x        = NULL,
+    y        = "Students reaching target level",
+    caption  = paste(
+      "Box: median and quartiles. Violin: distribution across schools.",
+      "Providers use different tests, so differences do not show that one test is easier or harder.",
+      sep = "\n"
+    )
+  ) +
+  theme_explore +
+  theme(
+    plot.title         = element_text(face = "bold", size = 14),
+    plot.subtitle      = element_text(
+      colour = "grey35",
+      size = 11,
+      margin = margin(b = 10)
+    ),
+    strip.text         = element_text(face = "bold", size = 11),
+    axis.text.x        = element_text(size = 9),
+    axis.text.y        = element_text(size = 10),
+    axis.title.y       = element_text(size = 12, margin = margin(r = 10)),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.position    = "top",
+    legend.justification = "left",
+    plot.caption       = element_text(
+      hjust = 0,
+      colour = "grey40",
+      size = 9,
+      lineheight = 1.15,
+      margin = margin(t = 12)
+    )
+  )
+
+plot_4
+
 # =============================================================================
 # COMBINE ALL PLOTS -----------------------------------------------------------
 # =============================================================================
@@ -434,9 +545,17 @@ top_row <- plot_grid(
   align = "h"
 )
 
+bottom_row <- plot_grid(plot_3,
+                        plot_4,
+                        labels = c("A", "B"),
+                        label_size = 14,
+                        ncol = 2,
+                        align = "h"
+)
+
 explore_figure <- plot_grid(
   top_row,
-  plot_3,
+  bottom_row,
   labels = c("", "C"),
   label_size = 14,
   ncol = 1,

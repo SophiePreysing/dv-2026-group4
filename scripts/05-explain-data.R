@@ -103,6 +103,11 @@ effect_p
 fit_provider <- update(fit_main, . ~ . + provider:schoolweging)
 anova(fit_main, fit_provider)
 
+# Does provider add anything?
+fit_no_provider <- update(fit_main, . ~ . - provider)
+anova(fit_no_provider, fit_main)
+AIC(fit_no_provider, fit_main)
+
 
 # =============================================================================
 # 3. ADVICE GAP PER SCHOOL ----------------------------------------------------
