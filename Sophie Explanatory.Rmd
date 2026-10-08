@@ -341,20 +341,27 @@ final_plot2 <- ggplot() +
   geom_text(
     data = line_labels,
     aes(x = score, y = fit, label = label, colour = schoolweging),
-    hjust = 0, nudge_x = 1, size = 5, lineheight = 0.9,
+    hjust = 0, nudge_x = 1, size = 4.2, lineheight = 0.9,
     fontface = "bold"
   ) +
-  # Gap arrow: 
+  # Gap arrow:
+  annotate(
+    "segment",
+    x = mean(model_data$score), xend = mean(model_data$score),
+    y = gap_data$fit[1], yend = gap_data$fit[2],
+    arrow = arrow(ends = "last", length = unit(0.29, "cm"), type = "closed"),
+    colour = "grey15", linewidth = 1.4
+  ) +
   annotate(
     "segment",
     x = mean(model_data$score), xend = mean(model_data$score),
     y = gap_data$fit[1], yend = gap_data$fit[2],
     arrow = arrow(ends = "last", length = unit(0.25, "cm"), type = "closed"),
-    colour = "black", linewidth = 0.8
+    colour = "#FF8C00", linewidth = 1
   ) +
   annotate(
     "label",
-    x = mean(model_data$score), y = max(gap_data$fit) + 8,
+    x = mean(model_data$score), y = max(gap_data$fit) + 3,
     label = paste0(
       "Same test results:\n", round(gap_size), " percentage points\n",
       "fewer pupils advised\nHAVO or higher"
