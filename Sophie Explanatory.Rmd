@@ -258,7 +258,9 @@ final_plot <- ggplot() +
       "common test (LIB), controlling for test provider. ",
       "\nThe gap grows at higher test results."
     ),
-    x = "Average % of pupils reaching the target level (3 subjects)",
+    x = "Test results: % of pupils at target level\n(average of maths, reading and language)",
+    # x = "Test results: % of pupils reaching the target level", <- other suggestion
+    # x = "Average % of pupils reaching the target level (3 subjects)", <- original 
     y = "% of pupils with HAVO-or-higher advice",
     caption = paste0(
       "Dots: schools (size = number of pupils with advice). Lines: predicted ",
@@ -271,6 +273,8 @@ final_plot <- ggplot() +
       "Excluded: special primary schools, schools with missing data, and ",
       "schools with fewer \nthan 10 advised pupils. '<5' counts replaced by ",
       "2.5. Source: DUO."
+      # add somewhere in the caption: "Target level: the higher of two national 
+      # reference levels ","(basic = 1F; target = 1S for maths, 2F for reading and language).\n",
     )
   ) +
   theme_minimal(base_size = 14) +
