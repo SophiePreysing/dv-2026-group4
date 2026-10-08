@@ -101,12 +101,8 @@ plot_1 <- ggplot(explore_gap, aes(schoolweging, advice_gap)) +
       "than their test results predict?"
     ),
     subtitle = paste(
-      "Advice gap = actual average advice minus advice expected",
-<<<<<<< HEAD
-      "from test results"
-=======
-      "\nfrom test results (first, simplified look)"
->>>>>>> 646691e8d0986a4367b77eb757b4ea9d94588701
+      "Advice gap = actual average advice minus advice expected\n",
+      "from test results (first, simplified look)"
     ),
     x = "Schoolweging (higher = more disadvantaged)",
     y = "Advice gap (tracks above/below prediction)",
