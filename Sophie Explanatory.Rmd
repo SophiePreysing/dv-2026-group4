@@ -5,9 +5,13 @@ date: "2026-10-07"
 output: html_document
 ---
 
-*Research Question*: Do schools with similar doorstroomtoets results give similar
+*Research Question*: Do schools with similar test results give similar
      secondary-school advice, regardless of how disadvantaged their
      student population is?
+     
+*Hypotheses*: 
+- H1: At the same test results, schools with more disadvantaged pupils (a higher schoolweging) advise a smaller share of pupils to HAVO or higher. (The main effect between schoolweging and advice controlling for test results)
+- H2: This gap depends on test results: the difference between advantaged and disadvantaged schools is larger at higher test results. (The interaction effect between test results and schoolweging)
 
 *Model*: pct_havo_plus ~ score_c * schoolweging_c + provider,
         weighted by n_advised
@@ -92,10 +96,10 @@ confint(rq3_model) #95% confidence intervals
 When controlling for test provider and holding schoolweging at its average, there is a positive relationship between test results and HAVO+ advice: schools where a higher percentage of pupils reaches the target level give a higher share of HAVO+ advice. Each percentage point (pp) higher score goes with 0.58 pp more HAVO+ advice (95% CI: 0.56 to 0.60, p < 0.001).
 
 *Schoolweging*
-There is a negative relationship between schoolweging and HAVO+ advice, at the same (average) test results and the same test provider: the more disadvantaged a school's student population, the smaller the share of pupils that gets HAVO+ advice. Each point higher schoolweging goes with 1.76 pp less HAVO+ advice (95% CI: −1.84 to −1.68, p < 0.001), so two schools with the same results but 10 points apart in schoolweging differ by about 18 pp (95% CI: 17 to 18 pp).
+There is a negative relationship between schoolweging and HAVO+ advice, at the same (average) test results and the same test provider: the more disadvantaged a school's student population, the smaller the share of pupils that gets HAVO+ advice. Each point higher schoolweging goes with 1.76 pp less HAVO+ advice (95% CI: −1.84 to −1.68, p < 0.001), so two schools with the same results but 10 points apart in schoolweging differ by about 18 pp (95% CI: 17 to 18 pp). This supports H1.
 
 *Interaction*
-The interaction is significant (−0.033, 95% CI: −0.037 to −0.028, p < 0.001): for every point increase in schoolweging (a more disadvantaged school), the positive relationship between test results and HAVO+ advice becomes 0.033 weaker. In other words, higher test results translate less into HAVO+ advice in more disadvantaged schools, so the gap between advantaged and disadvantaged schools is largest among high-scoring schools.
+The interaction is significant (−0.033, 95% CI: −0.037 to −0.028, p < 0.001): for every point increase in schoolweging (a more disadvantaged school), the positive relationship between test results and HAVO+ advice becomes 0.033 weaker. In other words, higher test results translate less into HAVO+ advice in more disadvantaged schools, so the gap between advantaged and disadvantaged schools is largest among high-scoring schools. This supports H2.
 
 *Intercept and model fit*
 With LIB as the reference provider, the intercept (43.8%, 95% CI: 43.4 to 44.2) is the predicted share of HAVO+ advice for a LIB school with average test results and average schoolweging. Together, test results, schoolweging and provider explain about two thirds of the variation in HAVO+ advice between schools (R² = 0.66).
@@ -391,9 +395,10 @@ final_plot2 <- ggplot() +
       "At the same test results, schools with more disadvantaged pupils",
       "advise\nfewer pupils to HAVO or higher"
     ),
-    subtitle = paste(
-      "Lines show the expected advice for advantaged, average and",
-      "disadvantaged schools.\nThe gap grows as test results rise."
+    subtitle = paste0(
+  "Lines show the average share of pupils advised HAVO or higher for ",
+  "advantaged, average and disadvantaged \nschools, estimated by a ",
+  "regression model. The gap grows as test results rise."
     ),
     x = "Test results: % of pupils reaching the target level",
     y = "% of pupils advised HAVO or higher",
