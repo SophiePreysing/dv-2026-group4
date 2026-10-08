@@ -423,11 +423,6 @@ final_plot2 <- ggplot() +
 final_plot2
 ```
 
-
-
-
-
-
 #6. Robustness Checks (do not forget changing 2.5 -> 1, 2.5 -> 4)
 ```{r}
 
