@@ -258,8 +258,8 @@ final_plot <- ggplot() +
       "common test (LIB), controlling for test provider. ",
       "\nThe gap grows at higher test results."
     ),
-    x = "Test results: % of pupils at target level\n(average of maths, reading and language)",
-    # x = "Test results: % of pupils reaching the target level", <- other suggestion
+    x = "Test results: % of pupils at the national target level\n(average of maths, reading and language)",
+    # x = "Test results: % of pupils reaching target level", <- other suggestion
     # x = "Average % of pupils reaching the target level (3 subjects)", <- original 
     y = "% of pupils with HAVO-or-higher advice",
     caption = paste0(
