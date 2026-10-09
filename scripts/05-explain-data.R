@@ -453,10 +453,12 @@ robustness
 # practically unchanged) and when measuring advice as the average on a
 # 1-6 scale (-0.05 per point, i.e. about half a track lower advice for a
 # 10-point difference in schoolweging).
-# The size of the effect does depend on the "<5" assumption. "<5" means
-# 1 to 4 pupils, so replacing it with 1 or 4 gives the most extreme
-# possible cases. The schoolweging effect then ranges from -2.16 to -1.43
-# pp per point (14 to 22 pp for a 10-point difference) and the
-# interaction from -0.014 to -0.037. So the gap is always clearly
-# negative, but its exact size is uncertain; 2.5 (the midpoint) is our
-# best estimate.
+
+# The size of the effect depends on the "<5" assumption. "<5" means 1 to
+# 4 pupils, so replacing it with 1 or 4 gives the most extreme cases.
+# Replacing "<5" with 1 or 4 instead of 2.5 keeps the effect of
+# schoolweging on advice (at the same test results) negative and
+# significant, but stronger with 1 and weaker with 4. The interaction
+# also stays negative and significant, but the gap grows more with test
+# results with 4 and less with 1. 2.5 (the midpoint) is our best
+# estimate.
