@@ -42,8 +42,8 @@ source(here::here("scripts", "01-get-data.R"))
 # ---- 0. Settings -----------------------------------------------------------
 
 # Replace "<5" (1-4 pupils) with 2.5, the midpoint.
-# Robustness: rerun with 1 and 4.
-lt5_value <- 2.5
+# Robustness: can be set to 1 or 4 before sourcing this script.
+if (!exists("lt5_value")) lt5_value <- 2.5
 
 # Keep only schools with at least 10 advised pupils.
 # Robustness: rerun with 5 and 20.
@@ -264,5 +264,8 @@ cor(school_rq3$pct_havo_plus, school_rq3$score)
 
 # ---- 8. Save ---------------------------------------------------------------
 
-dir.create(here::here("data", "processed"), showWarnings = FALSE)
-saveRDS(school_rq3, here::here("data", "processed", "school_rq3.rds"))
+# Only save the main version, so robustness runs don't overwrite it
+if (lt5_value == 2.5) {
+  dir.create(here::here("data", "processed"), showWarnings = FALSE)
+  saveRDS(school_rq3, here::here("data", "processed", "school_rq3.rds"))
+}

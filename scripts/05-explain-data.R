@@ -383,6 +383,46 @@ rob3_model <- lm(
   weights = n_advised
 )
 
+
+# Refit the main model on data with "<5" replaced by 1 instead of 2.5
+
+env_lt5_1 <- new.env()
+env_lt5_1$lt5_value <- 1
+source(here::here("scripts", "03-clean-data.R"), local = env_lt5_1)
+
+rob4_model_data <- env_lt5_1$school_rq3 |>
+  mutate(
+    score_c = score - mean(score),
+    schoolweging_c = schoolweging - mean(schoolweging),
+    provider = relevel(factor(provider), ref = "LIB")
+  )
+
+rob4_model <- lm(
+  pct_havo_plus ~ score_c * schoolweging_c + provider,
+  data = rob4_model_data,
+  weights = n_advised
+)
+
+
+# Refit the main model on data with "<5" replaced by 4 instead of 2.5
+env_lt5_4 <- new.env()
+env_lt5_4$lt5_value <- 4
+source(here::here("scripts", "03-clean-data.R"), local = env_lt5_4)
+
+rob5_model_data <- env_lt5_4$school_rq3 |>
+  mutate(
+    score_c = score - mean(score),
+    schoolweging_c = schoolweging - mean(schoolweging),
+    provider = relevel(factor(provider), ref = "LIB")
+  )
+
+rob5_model <- lm(
+  pct_havo_plus ~ score_c * schoolweging_c + provider,
+  data = rob5_model_data,
+  weights = n_advised
+)
+
+
 # Schoolweging effect and interaction (estimate and p-value) per model
 get_effect <- function(model, interaction_term) {
   coefs <- coef(summary(model))
@@ -399,14 +439,24 @@ robustness <- bind_rows(
   "Maths only" = get_effect(rob1_model, "maths_c:schoolweging_c"),
   "Average advice (1-6)" = get_effect(rob2_model, "score_c:schoolweging_c"),
   "Without AMN and DOE" = get_effect(rob3_model, "score_c:schoolweging_c"),
-  .id = "model"
+  .id = "model",
+  "<5 replaced by 1" = get_effect(rob4_model, "score_c:schoolweging_c"),
+  "<5 replaced by 4" = get_effect(rob5_model, "score_c:schoolweging_c")
 )
 
 robustness
 
-# The results are robust. The negative schoolweging effect and the negative
-# interaction remain significant (all p < 0.001) when using maths results
-# only (-2.10 pp per point of schoolweging), when excluding the two smallest
-# providers (-1.76 pp, practically unchanged), and when measuring advice as
-# the average on a 1-6 scale (-0.05 per point, i.e. about half a track lower
-# advice for a 10-point difference in schoolweging).
+# The results are robust in direction and significance. The negative
+# schoolweging effect and the negative interaction remain significant
+# (all p < 0.001) when using maths results only (-2.10 pp per point of
+# schoolweging), when excluding the two smallest providers (-1.76 pp,
+# practically unchanged) and when measuring advice as the average on a
+# 1-6 scale (-0.05 per point, i.e. about half a track lower advice for a
+# 10-point difference in schoolweging).
+# The size of the effect does depend on the "<5" assumption. "<5" means
+# 1 to 4 pupils, so replacing it with 1 or 4 gives the most extreme
+# possible cases. The schoolweging effect then ranges from -2.16 to -1.43
+# pp per point (14 to 22 pp for a 10-point difference) and the
+# interaction from -0.014 to -0.037. So the gap is always clearly
+# negative, but its exact size is uncertain; 2.5 (the midpoint) is our
+# best estimate.
