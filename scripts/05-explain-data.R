@@ -67,7 +67,7 @@
 # percentages of small schools are less reliable, which is also why the
 # model is weighted by school size.
 #
-# Why % HAVO-or-higher advice instead of an average advice score: a
+# Why % of HAVO-or-higher instead of an average advice score: a
 # percentage is easier for policymakers to interpret, needs only one cut-off
 # instead of assuming equal distances between tracks (PRO = 1, ..., VWO = 6),
 # and captures the most consequential boundary: HAVO largely determines
@@ -84,6 +84,9 @@
 # =============================================================================
 # 0. SETUP --------------------------------------------------------------------
 # =============================================================================
+
+install.packages("ggtext")
+library(ggtext)
 
 library(tidyverse)
 
@@ -214,146 +217,12 @@ gap_size # percentage points less HAVO+ advice in more disadvantaged schools
 # down by the same amount, so their shape and the gap between them are the
 # same for every test.
 #
-# Two versions below; we still need to choose one for the final report.
 
 # -----------------------------------------------------------------------------
-# Version 1: point size = school size, percentile labels
+# Final version: one point size, plain-language labels, bold gap arrow
 # -----------------------------------------------------------------------------
 
 line_labels <- pred_grid |>
-  filter(score == max(score)) |>
-  mutate(
-    label = c(
-      "Advantaged\n(10th percentile)",
-      "Average\n(50th percentile)",
-      "Disadvantaged\n(90th percentile)"
-    )[match(schoolweging, sw_levels)]
-  )
-
-final_plot <- ggplot() +
-  # Schools: colour = schoolweging, size = pupils with an advice
-  geom_point(
-    data = model_data,
-    aes(
-      x = score, y = pct_havo_plus,
-      colour = schoolweging, size = n_advised
-    ),
-    alpha = 0.35
-  ) +
-  # Confidence bands of the model lines
-  geom_ribbon(
-    data = pred_grid,
-    aes(
-      x = score, ymin = lwr, ymax = upr,
-      fill = schoolweging, group = schoolweging
-    ),
-    alpha = 0.25
-  ) +
-  # Dark outline under each line
-  geom_line(
-    data = pred_grid,
-    aes(x = score, y = fit, group = schoolweging),
-    colour = "grey20", linewidth = 2
-  ) +
-  # Model-predicted lines at the 10th, 50th and 90th percentile
-  geom_line(
-    data = pred_grid,
-    aes(x = score, y = fit, colour = schoolweging, group = schoolweging),
-    linewidth = 1.3
-  ) +
-  # Direct labels at the end of each line
-  geom_text(
-    data = line_labels,
-    aes(x = score, y = fit, label = label, colour = schoolweging),
-    hjust = 0, nudge_x = 1, size = 4.5, lineheight = 0.9
-  ) +
-  # The gap at an average score
-  annotate(
-    "segment",
-    x = mean(model_data$score), xend = mean(model_data$score),
-    y = gap_data$fit[2], yend = gap_data$fit[1],
-    arrow = arrow(ends = "both", length = unit(0.15, "cm")),
-    linewidth = 0.6
-  ) +
-  annotate(
-    "label",
-    x = mean(model_data$score), y = max(gap_data$fit) + 8,
-    label = paste0(
-      "Same test results:\n", gap_size,
-      " percentage points\nless HAVO+ advice"
-    ),
-    hjust = 1.05, vjust = 0, size = 4.5, linewidth = 0,
-    fill = alpha("white", 0.6), fontface = "bold"
-  ) +
-  scale_colour_viridis_c(
-    name = "Schoolweging\n(higher = more\ndisadvantaged)",
-    direction = -1, end = 0.9
-  ) +
-  scale_fill_viridis_c(direction = -1, end = 0.9, guide = "none") +
-  scale_size_area(
-    name = "Number of pupils\nwith advice\nper school",
-    max_size = 4,
-    breaks = c(25, 50, 75, 100, 125)
-  ) +
-  scale_x_continuous(
-    breaks = seq(0, 100, by = 25),
-    expand = expansion(mult = c(0.02, 0.35))
-  ) +
-  scale_y_continuous(limits = c(0, 100)) +
-  coord_cartesian(clip = "off") +
-  labs(
-    title = paste(
-      "At the same test results, more disadvantaged schools give",
-      "less HAVO+ advice"
-    ),
-    subtitle = paste0(
-      "Lines: regression predictions (95% CI) for schools using the most ",
-      "common test (LIB), controlling for test provider.\n",
-      "The gap grows at higher test results."
-    ),
-    x = paste0(
-      "Test results: % of pupils at the national target level\n",
-      "(average of maths, reading and language)"
-    ),
-    y = "% of pupils with HAVO-or-higher advice",
-    caption = paste0(
-      # line 1: what the plot elements are
-      "Dots: schools (size = number of pupils with advice). ",
-      "Lines: predicted % HAVO-or-higher advice at the 10th, 50th and 90th ",
-      "percentile of schoolweging,\n",
-      # line 2: model details
-      "for a school using LIB, controlling for test provider. ",
-      "Shaded bands: 95% confidence intervals (narrow because of the large ",
-      "number of schools).\n",
-      # line 3: definition of the x-axis
-      "National target level: the higher of two national reference levels ",
-      "(basic = 1F; target = 1S for maths, 2F for reading and language).\n",
-      # line 4: data and exclusions
-      "N = ", format(nrow(model_data), big.mark = ","),
-      " regular primary schools with 10+ advised pupils, 2024-2025. ",
-      "Excluded: special primary schools and schools with missing data. ",
-      "'<5' counts replaced by 2.5. Source: DUO."
-    )
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(face = "bold", size = 17),
-    plot.subtitle = element_text(size = 14),
-    plot.caption = element_text(size = 10, colour = "grey40", hjust = 0),
-    plot.title.position = "plot",
-    plot.caption.position = "plot",
-    legend.title = element_text(size = 13),
-    legend.text = element_text(size = 12),
-    panel.grid.minor = element_blank()
-  )
-
-final_plot
-
-# -----------------------------------------------------------------------------
-# Version 2: one point size, plain-language labels, bold gap arrow
-# -----------------------------------------------------------------------------
-
-line_labels2 <- pred_grid |>
   filter(score == max(score)) |>
   mutate(
     label = c(
@@ -363,12 +232,12 @@ line_labels2 <- pred_grid |>
     )[match(schoolweging, sw_levels)]
   )
 
-final_plot2 <- ggplot() +
+final_plot <- ggplot() +
   # Schools (all providers)
   geom_point(
     data = model_data,
     aes(x = score, y = pct_havo_plus, colour = schoolweging),
-    size = 1.2, alpha = 0.2
+    size = 1.2, alpha = 0.07
   ) +
   # Uncertainty bands of the lines
   geom_ribbon(
@@ -379,33 +248,20 @@ final_plot2 <- ggplot() +
     ),
     alpha = 0.4
   ) +
-  # Dark outline under each line
-  geom_line(
-    data = pred_grid,
-    aes(x = score, y = fit, group = schoolweging),
-    colour = "grey20", linewidth = 2
-  ) +
   # Expected advice at three levels of disadvantage
   geom_line(
     data = pred_grid,
     aes(x = score, y = fit, colour = schoolweging, group = schoolweging),
-    linewidth = 1.3
+    linewidth = 1.5
   ) +
   # Line labels
   geom_text(
-    data = line_labels2,
+    data = line_labels,
     aes(x = score, y = fit, label = label, colour = schoolweging),
     hjust = 0, nudge_x = 1, size = 4.2, lineheight = 0.9,
     fontface = "bold"
   ) +
-  # Gap arrow: dark outline, then orange arrow on top
-  annotate(
-    "segment",
-    x = mean(model_data$score), xend = mean(model_data$score),
-    y = gap_data$fit[1], yend = gap_data$fit[2],
-    arrow = arrow(ends = "last", length = unit(0.29, "cm"), type = "closed"),
-    colour = "grey15", linewidth = 1.4
-  ) +
+  # Gap arrow: 
   annotate(
     "segment",
     x = mean(model_data$score), xend = mean(model_data$score),
@@ -413,28 +269,36 @@ final_plot2 <- ggplot() +
     arrow = arrow(ends = "last", length = unit(0.25, "cm"), type = "closed"),
     colour = "#FF8C00", linewidth = 1
   ) +
+  # Gap label: "17 percentage points" in the same orange as the arrow
   annotate(
-    "label",
+    "richtext",
     x = mean(model_data$score), y = max(gap_data$fit) + 3,
     label = paste0(
-      "Same test results:\n", round(gap_size), " percentage points\n",
-      "fewer pupils advised\nHAVO or higher"
+      "<b>Same test results:<br>",
+      "<span style='color:#FF8C00'>", round(gap_size),
+      " percentage points</span><br>",
+      "fewer pupils advised<br>HAVO or higher</b>"
     ),
-    hjust = 1.05, vjust = 0, size = 4.5, linewidth = 0,
-    fill = alpha("white", 0.7), fontface = "bold"
+    hjust = 1.05, vjust = 0, size = 4.5, lineheight = 1.2,
+    fill = alpha("white", 0.7), label.colour = NA
   ) +
   scale_colour_viridis_c(
-    name = "Schoolweging\n(higher = more\ndisadvantaged)",
-    breaks = c(20, 25, 30, 35),
+    name = NULL,
+    breaks = range(model_data$schoolweging),
+    labels = c("Least\ndisadvantaged\nschools", "Most\ndisadvantaged\nschools"),
     direction = -1, end = 0.9,
     guide = guide_colourbar(barheight = unit(5, "cm"))
   ) +
   scale_fill_viridis_c(direction = -1, end = 0.9, guide = "none") +
   scale_x_continuous(
     breaks = seq(0, 100, by = 25),
+    labels = \(x) paste0(x, "%"),
     expand = expansion(mult = c(0.02, 0.3))
   ) +
-  scale_y_continuous(limits = c(0, 100)) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    labels = \(x) paste0(x, "%")
+  ) +
   coord_cartesian(clip = "off") +
   labs(
     title = paste(
@@ -446,16 +310,17 @@ final_plot2 <- ggplot() +
       "advantaged, average and disadvantaged\nschools, estimated by a ",
       "regression model. The gap grows as test results rise."
     ),
-    x = "Test results: % of pupils reaching the target level",
-    y = "% of pupils advised HAVO or higher",
+    x = "Test results: pupils reaching the target level",
+    y = "Pupils advised HAVO or higher",
     caption = paste0(
-      "Dots: schools (all test providers). Test results: average % of ",
-      "pupils reaching the target level in maths, reading and language. ",
-      "Lines: regression\npredictions at the 10th, 50th and 90th ",
-      "percentile of schoolweging, controlling for test provider (shown ",
-      "for LIB, the most common test); shaded bands:\n95% confidence ",
+      "Dots: schools (all test providers), coloured by schoolweging ",
+      "(how disadvantaged a school's pupils are). Test results: average % ",
+      "of pupils reaching\nthe target level in maths, reading and ",
+      "language. Lines: regression predictions at the 10th, 50th and 90th ",
+      "percentile of schoolweging,\ncontrolling for test provider (shown ",
+      "for LIB, the most common test); shaded bands: 95% confidence ",
       "intervals. N = ", format(nrow(model_data), big.mark = ","),
-      " regular primary schools with 10+ advised pupils, 2024-2025; ",
+      "\nregular primary schools with 10+ advised pupils, 2024-2025; ",
       "'<5' counts replaced by 2.5. Source: DUO."
     )
   ) +
@@ -470,12 +335,13 @@ final_plot2 <- ggplot() +
     plot.caption.position = "plot",
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
     legend.text = element_text(size = 11),
+    legend.ticks = element_blank(),
     panel.grid.minor = element_blank()
   )
 
-final_plot2
+final_plot
+
 
 
 # =============================================================================
