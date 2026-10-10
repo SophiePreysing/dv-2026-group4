@@ -1,13 +1,12 @@
 ---
 title: "Same Test Results, Different Advice"
 subtitle: "DV Assignment 2 – Part 2 (Final report)"
-author: "Group 4: Natasha, Sander van Nieuwenhuijzen, Sophie Preysing"
+author: "Group 4: Sander van Nieuwenhuijzen, Sophie Preysing, Natasha Medved"
 date: "October 2026"
 output:
   html_document:
     toc: true
     toc_float: true
-    number_sections: true
 ---
 
 ```{r setup, include = FALSE}
@@ -23,6 +22,17 @@ library(ggtext)
 library(cowplot)
 library(here)
 ```
+
+# Research question and target audience
+
+The doorstroomtoets (the mandatory Dutch primary school transition test for Group 8 pupils) has sparked numerous debates about equal opportunities in education. This motivated government officials to launch a new doorstroomtoets (transfer test) in 2023 (Current Debates and Reforms, 2026), with the hope that a newly devised test would improve access to higher education for pupils from less privileged backgrounds. It is therefore important to understand whether, under this new test, schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their pupils are.
+
+This project adopts an inferential approach: the goal is not to predict the advice of individual schools, but to test whether a school’s disadvantage is related to its advice. The research question is: “Do schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their student population is?” This is tested with two hypotheses:
+
+H1: At the same test results, schools with more disadvantaged pupils (a higher schoolweging) advise a smaller share of pupils to HAVO or higher.
+H2: This gap is larger at higher test results.
+
+The target audience is education policymakers, such as staff at the Ministry of Education (OCW). They know the debate about fair school advice but are not statistical experts, so the visualization avoids statistical jargon and uses simple wording.
 
 ```{r data}
 # Load the cleaned data (created by scripts/03-clean-data.R).
@@ -41,17 +51,6 @@ model_data <- school_rq3 |>
     provider = relevel(factor(provider), ref = "LIB")
   )
 ```
-
-# Research question and target audience
-
-The doorstroomtoets (the mandatory Dutch primary school transition test for Group 8 pupils) has sparked numerous debates about equal opportunities in education. This motivated government officials to launch a new doorstroomtoets (transfer test) in 2023 (Current Debates and Reforms, 2026), with the hope that a newly devised test would improve access to higher education for pupils from less privileged backgrounds. It is therefore important to understand whether, under this new test, schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their pupils are.
-
-This project adopts an inferential approach: the goal is not to predict the advice of individual schools, but to test whether a school’s disadvantage is related to its advice. The research question is: “Do schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their student population is?” This is tested with two hypotheses:
-
-H1: At the same test results, schools with more disadvantaged pupils (a higher schoolweging) advise a smaller share of pupils to HAVO or higher.
-H2: This gap is larger at higher test results.
-
-The target audience is education policymakers, such as staff at the Ministry of Education (OCW). They know the debate about fair school advice but are not statistical experts, so the visualization avoids statistical jargon and uses simple wording.
 
 # Exploratory process
 
@@ -227,7 +226,7 @@ plot_grid(
 )
 ```
 
-Plot A shows that all three subjects decline with schoolweging in a similar way and correlate moderately, which is why they were combined into one average score; the extreme values of 0% and 100% (black circles) come mostly from small schools, which led to the minimum of 10 advised pupils. Plot B shows that schools using different test providers have broadly similar levels of disadvantage, while the share of pupils reaching the target level differs between tests, which is why test provider is included as a control.
+Plot A shows that all three subjects decline with schoolweging in a similar way and correlate moderately, which is why they were combined into one average score; the extreme values of 0% and 100% (black circles) come mostly from small schools, which is why we selected schools with at least 10 pupils. Plot B shows that schools using different test providers have similar levels of disadvantage, while the share of pupils reaching the target level differs between tests, which is why test provider is included as a control.
 
 # Data and preparation
 
@@ -241,7 +240,7 @@ DUO hides counts below 5 as ‘<5’; these were replaced with 2.5, the midpoint
 
 # Model 
 
-```{r model}
+```{r}
 # Weighted by n_advised: percentages of larger schools are more reliable
 rq3_model <- lm(
   pct_havo_plus ~ score_c * schoolweging_c + provider,
@@ -250,14 +249,18 @@ rq3_model <- lm(
 )
 
 summary(rq3_model)
-confint(rq3_model)
+confint(rq3_model) 
+
 ```
 
 Controlling for test provider, schools with higher test results advise more pupils to HAVO or higher. At the same test results, however, more disadvantaged schools advise fewer pupils to HAVO or higher: each point higher schoolweging goes with 1.76 percentage points (p.p.) less (95% CI: −1.84 to −1.68, p < 0.001). This supports H1.
 
 The interaction is also negative and significant (−0.033, 95% CI: −0.037 to −0.028, p < 0.001): the positive relationship between test results and advice becomes weaker as schoolweging increases. The gap therefore grows with test results: it is small among low-scoring schools and largest among high-scoring ones. This supports H2. Together, the predictors explain about two thirds of the differences in advice between schools (R² = 0.66).
 
-```{r plot-preparation}
+# Plot preparation:
+
+```{r}
+
 # geom_smooth() cannot draw trend lines from our own model. So we let the
 # model predict % HAVO+ advice across all scores, for a LIB school, at low,
 # medium and high schoolweging, and plot those predictions. This keeps the
@@ -297,7 +300,7 @@ gap_data$fit <- predict(rq3_model, newdata = gap_data)
 
 gap_size <- round(gap_data$fit[1] - gap_data$fit[2], 1)
 
-# Line labels
+# Line labels:
 line_labels <- pred_grid |>
   filter(score == max(score)) |>
   mutate(
@@ -307,11 +310,18 @@ line_labels <- pred_grid |>
       "Disadvantaged\nschools"
     )[match(schoolweging, sw_levels)]
   )
+
+
 ```
 
 # Final explanatory visualization
 
 ```{r final-plot, fig.width = 11, fig.height = 7.5, out.width = "100%"}
+# Legend labels sit slightly inside the bar ends, so they don't stick out
+# above or below the colour bar
+sw_range <- range(model_data$schoolweging)
+legend_breaks <- sw_range + c(1, -1) * 0.08 * diff(sw_range)
+
 final_plot <- ggplot() +
   # Schools (all providers)
   geom_point(
@@ -341,7 +351,7 @@ final_plot <- ggplot() +
     hjust = 0, nudge_x = 1, size = 4.2, lineheight = 0.9,
     fontface = "bold"
   ) +
-  # Gap arrow
+  # Gap arrow: 
   annotate(
     "segment",
     x = mean(model_data$score), xend = mean(model_data$score),
@@ -353,21 +363,31 @@ final_plot <- ggplot() +
   annotate(
     "richtext",
     x = mean(model_data$score), y = max(gap_data$fit) + 3,
-    label = paste0(
+        label = paste0(
       "<b>Same test results:<br>",
       "<span style='color:#FF8C00'>", round(gap_size),
-      " percentage points</span><br>",
-      "fewer pupils advised<br>HAVO or higher</b>"
+      " fewer pupils per 100</span><br>",
+      "advised HAVO or higher</b>"
     ),
+   #label = paste0(
+   #  "<b>Same test results:<br>",
+   #  "<span style='color:#FF8C00'>", round(gap_size),
+   #  " percentage points</span><br>",
+   #  "fewer pupils advised<br>HAVO or higher</b>"
+   #),
     hjust = 1.05, vjust = 0, size = 4.5, lineheight = 1.2,
     fill = alpha("white", 0.7), label.colour = NA
   ) +
   scale_colour_viridis_c(
-    name = NULL,
-    breaks = range(model_data$schoolweging),
-    labels = c("Least\ndisadvantaged\nschools", "Most\ndisadvantaged\nschools"),
+    name = "Schoolweging",
+    breaks = legend_breaks,
+    labels = c("Least\ndisadvantaged", "Most\ndisadvantaged"),
     direction = -1, end = 0.9,
-    guide = guide_colourbar(barheight = unit(5, "cm"))
+    guide = guide_colourbar(
+      barheight = unit(6, "cm"),
+      barwidth = unit(0.5, "cm"),
+      title.position = "top"
+    )
   ) +
   scale_fill_viridis_c(direction = -1, end = 0.9, guide = "none") +
   scale_x_continuous(
@@ -415,15 +435,21 @@ final_plot <- ggplot() +
     plot.caption.position = "plot",
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12),
-    legend.text = element_text(size = 11),
+     legend.title = element_text(
+      size = 12, face = "bold", margin = margin(b = 12)
+    ),
+    legend.text = element_text(
+      size = 11, lineheight = 0.9, margin = margin(l = 6)
+    ),
     legend.ticks = element_blank(),
     panel.grid.minor = element_blank()
   )
 
 final_plot
+
 ```
 
-Each dot is one school, placed by its test result (x-axis) and its share of pupils advised HAVO-or-higher (y-axis), and coloured by schoolweging from yellow-green (advantage) to dark purple (disadvantage). The three lines show the model's predicted advice for schools at the 10th, 50th, and 90th percentile of schoolweging, with shaded 95% confidence intervals. The orange arrow marks the main finding: at an average test result, a disadvantaged school advises 17 percentage points fewer pupils to HAVO or higher than an advantaged school. The lines fan out to the right: the gap is small at low test results and largest at high test results.
+Each dot is one school, placed by its test result (x-axis) and its share of pupils advised HAVO-or-higher (y-axis), and coloured by schoolweging from yellow-green (advantage) to dark purple (disadvantage). The three lines show the model's predicted advice for schools at the 10th, 50th, and 90th percentile of schoolweging, with shaded 95% confidence intervals. The orange arrow marks the main finding: at an average test result, a disadvantaged school advises 17 fewer pupils per 100 to HAVO or higher than an advantaged school. The lines fan out to the right: the gap is small at low test results and largest at high test results.
 
 # Robustness check
 
@@ -524,3 +550,7 @@ The group used Clause Opus 5.5 and Clausde Sonnet 4.6. AI was used for technical
 
 - Change to APA guidelines
 Current debates and reforms. (2026). Europa.Eu. https://national-policies.eacea.ec.europa.eu/youthwiki/chapters/netherlands/311-current-debates-and-reforms
+
+
+
+
