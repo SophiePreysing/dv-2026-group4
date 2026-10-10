@@ -99,10 +99,6 @@ DUO hides counts below 5 as "<5". Dropping every school with such a count would 
 
 # Exploratory process
 
-<!-- TODO: required by the brief. Add at least one exploratory graph
-(e.g. the one from Part 1, or an updated version) and describe what it
-showed and how it shaped the final visualization. -->
-
 [Add exploratory graph and description]
 
 ```{r exploratory-plot, eval = FALSE}
@@ -338,4 +334,5 @@ The group used Clause Opus 5.5 and Clausde Sonnet 4.6. AI was used for technical
 
 # References
 
-[Add references, e.g. DUO open data, the course data background page, R packages.]
+- Change to APA guidelines
+Current debates and reforms. (2026). Europa.Eu. https://national-policies.eacea.ec.europa.eu/youthwiki/chapters/netherlands/311-current-debates-and-reforms
