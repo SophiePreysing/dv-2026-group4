@@ -1,0 +1,369 @@
+---
+title: "Same Test Results, Different Advice"
+subtitle: "DV Assignment 2 – Part 2 (Final report)"
+author: "Group 4: Natasha, Sander van Nieuwenhuijzen, Sophie Preysing"
+date: "October 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.align = "center"
+)
+
+library(tidyverse)
+library(ggtext)
+library(here)
+```
+
+# Research question and target audience
+
+The doorstroomtoets (the mandatory Dutch primary school transition test for Group 8 pupils) has sparked numerous debates about equal opportunities in education. This motivated government officials to launch a new doorstroomtoets (transfer test) in 2023 (Current Debates and Reforms, 2026), with the hope that a newly devised test would improve access to higher education for pupils from less privileged backgrounds. It is therefore important to understand whether, under this new test, schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their pupils are.
+
+This project adopts an inferential approach: the goal is not to predict the advice of individual schools, but to test whether a school’s disadvantage is related to its advice. The research question is: “Do schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their student population is?” This is tested with two hypotheses:
+
+H1: At the same test results, schools with more disadvantaged pupils (a higher schoolweging) advise a smaller share of pupils to HAVO or higher.
+H2: This gap is larger at higher test results.
+
+The target audience is education policymakers, such as staff at the Ministry of Education (OCW). They know the debate about fair school advice but are not statistical experts, so the visualization avoids statistical jargon and uses simple wording.
+
+# Exploratory process
+
+[Add exploratory graph and description]
+
+```{r exploratory-plot, eval = FALSE}
+# TODO: paste the exploratory plot code here and remove eval = FALSE
+```
+
+# Data and preparation
+
+Using the DUO doorstroomtoets data, this analysis combines all four DUO files for school year 2024–2025, aggregated to one row per school and joined. Only regular primary schools were kept. The outcome is the percentage of pupils with a HAVO, HAVO/VWO or VWO advice, out of all pupils with an advice on the PRO–VWO scale (VSO and “no advice possible” were excluded). This outcome is referred to as HAVO or higher. A percentage was preferred over an average advice score because it is easier for policymakers to interpret.
+
+Test results are the average percentage of pupils reaching the target level (1S for maths, 2F for reading and language). They are combined since exploratory findings showed that the three subjects correlated moderately at school level (r = 0.57–0.68) and declined with schoolweging in a similar way. Each school’s test provider is the test taken by most of its pupils.Test provider (the test taken by most pupils) was included as a control, since exploratory findings showed that the share of pupils reaching the target level differs between tests. Schools missing from any of the four files were removed, as were schools with fewer than 10 advised pupils, because in such small groups a single pupil shifts the percentage by more than 10 points. The final sample contains 5,718 schools.
+
+The data were analysed with a linear regression of HAVO or higher on test results, schoolweging and their interaction, controlling for test provider. Schools were weighted by their number of advised pupils, as percentages of small schools are less reliable. Test results and schoolweging were centred on their mean, so the schoolweging effect describes a school with average test results; this does not change the model’s predictions.
+
+DUO hides counts below 5 as ‘<5’; these were replaced with 2.5, the midpoint of 1–4, and tested in the robustness checks.
+
+```{r data}
+# Load the cleaned data (created by scripts/03-clean-data.R).
+# If the processed file does not exist yet, build it first.
+data_path <- here("data", "processed", "school_rq3.rds")
+if (!file.exists(data_path)) {
+  source(here("scripts", "03-clean-data.R"))
+}
+school_rq3 <- readRDS(data_path)
+
+# Centre score and schoolweging; LIB (largest provider) as reference
+model_data <- school_rq3 |>
+  mutate(
+    score_c = score - mean(score),
+    schoolweging_c = schoolweging - mean(schoolweging),
+    provider = relevel(factor(provider), ref = "LIB")
+  )
+```
+
+# Model 
+
+```{r}
+# Weighted by n_advised: percentages of larger schools are more reliable
+rq3_model <- lm(
+  pct_havo_plus ~ score_c * schoolweging_c + provider,
+  data = model_data,
+  weights = n_advised
+)
+
+summary(rq3_model)
+confint(rq3_model) 
+
+```
+
+Controlling for test provider, schools with higher test results advise more pupils to HAVO or higher. At the same test results, however, more disadvantaged schools advise fewer pupils to HAVO or higher: each point higher schoolweging goes with 1.76 percentage points (p.p.) less (95% CI: −1.84 to −1.68, p < 0.001). This supports H1.
+
+The interaction is also negative and significant (−0.033, 95% CI: −0.037 to −0.028, p < 0.001): the positive relationship between test results and advice becomes weaker as schoolweging increases. The gap therefore grows with test results: it is small among low-scoring schools and largest among high-scoring ones. This supports H2. Together, the predictors explain about two thirds of the differences in advice between schools (R² = 0.66).
+
+# Plot preparation:
+
+```{r}
+
+# geom_smooth() cannot draw trend lines from our own model. So we let the
+# model predict % HAVO+ advice across all scores, for a LIB school, at low,
+# medium and high schoolweging, and plot those predictions. This keeps the
+# plot and the model equal.
+
+sw_levels <- quantile(model_data$schoolweging, c(0.1, 0.5, 0.9))
+
+pred_grid <- expand_grid(
+  score = seq(min(model_data$score), max(model_data$score),
+              length.out = 100),
+  schoolweging = sw_levels
+) |>
+  mutate(
+    score_c = score - mean(model_data$score),
+    schoolweging_c = schoolweging - mean(model_data$schoolweging),
+    provider = factor("LIB", levels = levels(model_data$provider))
+  )
+
+pred_grid <- bind_cols(
+  pred_grid,
+  as_tibble(predict(rq3_model, newdata = pred_grid, interval = "confidence"))
+)
+
+# Both schools have the same (average) % reaching the target level and use
+# LIB; only their schoolweging differs (10th pct: advantaged vs 90th pct:
+# disadvantaged). The arrow in the plot shows the difference in their
+# predicted % HAVO+ advice.
+
+gap_data <- tibble(schoolweging = unname(sw_levels[c(1, 3)])) |>
+  mutate(
+    score = mean(model_data$score),
+    score_c = 0,
+    schoolweging_c = schoolweging - mean(model_data$schoolweging),
+    provider = factor("LIB", levels = levels(model_data$provider))
+  )
+gap_data$fit <- predict(rq3_model, newdata = gap_data)
+
+gap_size <- round(gap_data$fit[1] - gap_data$fit[2], 1)
+
+# Line labels:
+line_labels <- pred_grid |>
+  filter(score == max(score)) |>
+  mutate(
+    label = c(
+      "Advantaged\nschools",
+      "Average\nschools",
+      "Disadvantaged\nschools"
+    )[match(schoolweging, sw_levels)]
+  )
+
+
+```
+
+# Final explanatory visualization
+
+```{r}
+
+final_plot <- ggplot() +
+  # Schools (all providers)
+  geom_point(
+    data = model_data,
+    aes(x = score, y = pct_havo_plus, colour = schoolweging),
+    size = 1.2, alpha = 0.07
+  ) +
+  # Uncertainty bands of the lines
+  geom_ribbon(
+    data = pred_grid,
+    aes(
+      x = score, ymin = lwr, ymax = upr,
+      fill = schoolweging, group = schoolweging
+    ),
+    alpha = 0.4
+  ) +
+  # Expected advice at three levels of disadvantage
+  geom_line(
+    data = pred_grid,
+    aes(x = score, y = fit, colour = schoolweging, group = schoolweging),
+    linewidth = 1.5
+  ) +
+  # Line labels
+  geom_text(
+    data = line_labels,
+    aes(x = score, y = fit, label = label, colour = schoolweging),
+    hjust = 0, nudge_x = 1, size = 4.2, lineheight = 0.9,
+    fontface = "bold"
+  ) +
+  # Gap arrow: 
+  annotate(
+    "segment",
+    x = mean(model_data$score), xend = mean(model_data$score),
+    y = gap_data$fit[1], yend = gap_data$fit[2],
+    arrow = arrow(ends = "last", length = unit(0.25, "cm"), type = "closed"),
+    colour = "#FF8C00", linewidth = 1
+  ) +
+  # Gap label: "17 percentage points" in the same orange as the arrow
+  annotate(
+    "richtext",
+    x = mean(model_data$score), y = max(gap_data$fit) + 3,
+    label = paste0(
+      "<b>Same test results:<br>",
+      "<span style='color:#FF8C00'>", round(gap_size),
+      " percentage points</span><br>",
+      "fewer pupils advised<br>HAVO or higher</b>"
+    ),
+    hjust = 1.05, vjust = 0, size = 4.5, lineheight = 1.2,
+    fill = alpha("white", 0.7), label.colour = NA
+  ) +
+  scale_colour_viridis_c(
+    name = NULL,
+    breaks = range(model_data$schoolweging),
+    labels = c("Least\ndisadvantaged\nschools", "Most\ndisadvantaged\nschools"),
+    direction = -1, end = 0.9,
+    guide = guide_colourbar(barheight = unit(5, "cm"))
+  ) +
+  scale_fill_viridis_c(direction = -1, end = 0.9, guide = "none") +
+  scale_x_continuous(
+    breaks = seq(0, 100, by = 25),
+    labels = \(x) paste0(x, "%"),
+    expand = expansion(mult = c(0.02, 0.3))
+  ) +
+  scale_y_continuous(
+    limits = c(0, 100),
+    labels = \(x) paste0(x, "%")
+  ) +
+  coord_cartesian(clip = "off") +
+  labs(
+    title = paste(
+      "At the same test results, schools with more disadvantaged pupils",
+      "advise\nfewer pupils to HAVO or higher"
+    ),
+    subtitle = paste0(
+      "Lines show the average share of pupils advised HAVO or higher for ",
+      "advantaged, average and disadvantaged\nschools, estimated by a ",
+      "regression model. The gap grows as test results rise."
+    ),
+    x = "Test results: pupils reaching the target level",
+    y = "Pupils advised HAVO or higher",
+    caption = paste0(
+      "Dots: schools (all test providers), coloured by schoolweging ",
+      "(how disadvantaged a school's pupils are). Test results: average % ",
+      "of pupils reaching\nthe target level in maths, reading and ",
+      "language. Lines: regression predictions at the 10th, 50th and 90th ",
+      "percentile of schoolweging,\ncontrolling for test provider (shown ",
+      "for LIB, the most common test); shaded bands: 95% confidence ",
+      "intervals. N = ", format(nrow(model_data), big.mark = ","),
+      "\nregular primary schools with 10+ advised pupils, 2024-2025; ",
+      "'<5' counts replaced by 2.5. Source: DUO."
+    )
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 14, colour = "grey25"),
+    plot.caption = element_text(
+      size = 9.5, colour = "grey40", hjust = 0, lineheight = 1.15
+    ),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.text = element_text(size = 11),
+    legend.ticks = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+final_plot
+
+```
+
+Each dot is one school, placed by its test result (x-axis) and its share of pupils advised HAVO-or-higher (y-axis), and coloured by schoolweging from yellow-green (advantage) to dark purple (disadvantage). The three lines show the model's predicted advice for schools at the 10th, 50th, and 90th percentile of schoolweging, with shaded 95% confidence intervals. The orange arrow marks the main finding: at an average test result, a disadvantaged school advises 17 percentage points fewer pupils to HAVO or higher than an advantaged school. The lines fan out to the right: the gap is small at low test results and largest at high test results.
+
+# Robustness check
+
+```{r robustness}
+# Each robustness model changes one choice; the schoolweging effect (H1)
+# and the interaction (H2) should keep their sign and significance.
+
+# Maths only, instead of the average of three subjects
+rob1_model_data <- model_data |>
+  mutate(maths_c = pct_maths_1s - mean(pct_maths_1s))
+
+rob1_model <- lm(
+  pct_havo_plus ~ maths_c * schoolweging_c + provider,
+  data = rob1_model_data,
+  weights = n_advised
+)
+
+# Average advice on the 1-6 scale, instead of % HAVO+
+rob2_model <- lm(
+  avg_advice ~ score_c * schoolweging_c + provider,
+  data = model_data,
+  weights = n_advised
+)
+
+# Without AMN and DOE (smallest providers)
+rob3_model_data <- model_data |>
+  filter(!provider %in% c("DOE", "AMN")) |>
+  droplevels()
+
+rob3_model <- lm(
+  pct_havo_plus ~ score_c * schoolweging_c + provider,
+  data = rob3_model_data,
+  weights = n_advised
+)
+
+# "<5" replaced by 1 or 4 instead of 2.5: rebuild the data in a separate
+# environment, so the main data and the saved .rds are not overwritten
+fit_lt5 <- function(value) {
+  env <- new.env()
+  env$lt5_value <- value
+  source(here("scripts", "03-clean-data.R"), local = env)
+  data <- env$school_rq3 |>
+    mutate(
+      score_c = score - mean(score),
+      schoolweging_c = schoolweging - mean(schoolweging),
+      provider = relevel(factor(provider), ref = "LIB")
+    )
+  lm(
+    pct_havo_plus ~ score_c * schoolweging_c + provider,
+    data = data,
+    weights = n_advised
+  )
+}
+
+# Schoolweging effect and interaction (estimate and p-value) per model
+get_effect <- function(model, interaction_term) {
+  coefs <- coef(summary(model))
+  tibble(
+    "Schoolweging estimate" = coefs["schoolweging_c", "Estimate"],
+    "Schoolweging p-value" = coefs["schoolweging_c", "Pr(>|t|)"],
+    "Interaction estimate" = coefs[interaction_term, "Estimate"],
+    "Interaction p-value" = coefs[interaction_term, "Pr(>|t|)"]
+  )
+}
+
+robustness <- bind_rows(
+  "Main model ('<5' = 2.5)" = get_effect(rq3_model, "score_c:schoolweging_c"),
+  "Maths only" = get_effect(rob1_model, "maths_c:schoolweging_c"),
+  "Average advice (1-6)" = get_effect(rob2_model, "score_c:schoolweging_c"),
+  "Without AMN and DOE" = get_effect(rob3_model, "score_c:schoolweging_c"),
+  "'<5' = 1" = get_effect(fit_lt5(1), "score_c:schoolweging_c"),
+  "'<5' = 4" = get_effect(fit_lt5(4), "score_c:schoolweging_c"),
+  .id = "Model"
+)
+
+knitr::kable(
+  robustness,
+  digits = c(0, 3, 4, 3, 4),
+  caption = "Robustness checks: schoolweging effect and interaction per model"
+)
+```
+
+The findings are robust. Both the schoolweging effect and the interaction remain negative and significant when using maths results only, when measuring advice as an average on a 1–6 scale, and when excluding the two smallest providers. Replacing “<5” with the most extreme values (1 or 4) changes only the strength of the effects, not their direction or significance. 
+
+# Conclusion 
+
+Schools with similar test results do not give similar advice. At the same test result, schools with more disadvantaged pupils advise fewer pupils to HAVO or higher and the gap grows as test results rise. For policymakers, this indicates that first, pupils in disadvantaged schools may be under-advised compared with similar pupils elsewhere, yet this is exactly the inequality the 2023 doorstroomtoets was meant to reduce. Second, the gap is largest for high-scoring schools which means the pupils most likely to miss out on access to higher education are the ones who perform well at disadvantaged schools.
+
+## Limitations and future work
+
+The data are school-level aggregates, so the analysis cannot show whether individual pupils with the same result receive different advice. Also, the model is not causal: the gap could reflect teachers' prejudices, or information about pupils that the test does not capture. Moreover, since 2024 schools give their advice before the test and can only adjust it upwards, so advice partly precedes the results. Future work could use pupil-level data and examine which components of schoolweging (e.g. parental education) drive the gap.
+
+# AI use
+
+The group used Clause Opus 5.5 and Clausde Sonnet 4.6. AI was used for technical tasks: R syntax, the data-inspection and data-cleaning code, and design suggestion for the final explanatory plot. It was also used to set up the report structure and reduce the word count. The research question, hypotheses, choice of model, interpretation of the results and the content of the report were done without AI because… The AI worked from the assignment brief, a codebook, and our internally developed AI guidelines which governed how the AI…. and ensured accuracy, security, sovereignty and meaning in its outputs. The outputs were checked by peer review. These checks mattered because during the data cleaning phase, it left out the 2f language test result column. This was caught by a peer and was rectified before proceeding with the explanatory analysis.
+
+# References
+
+- Change to APA guidelines
+Current debates and reforms. (2026). Europa.Eu. https://national-policies.eacea.ec.europa.eu/youthwiki/chapters/netherlands/311-current-debates-and-reforms
+
+
+
+
