@@ -365,7 +365,7 @@ rob1_model <- lm(
   weights = n_advised
 )
 
-# Average advice on the 1-6 scale, instead of % HAVO+
+# Average advice on the 1-6 scale, instead of % HAVO+ advice
 rob2_model <- lm(
   avg_advice ~ score_c * schoolweging_c + provider,
   data = model_data,
