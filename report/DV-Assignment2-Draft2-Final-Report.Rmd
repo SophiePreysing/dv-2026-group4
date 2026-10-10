@@ -1,6 +1,6 @@
 ---
-title: "Same Test Results, Different Advice"
-subtitle: "DV Assignment 2 – Part 2 (Final report)"
+title: "Fair Advice After the Doorstroomtoets? School Disadvantage and Secondary-School Advice"
+subtitle: "DV Assignment – Final report"
 author: "Group 4: Sander van Nieuwenhuijzen, Sophie Preysing, Natasha Medved"
 date: "October 2026"
 output:
@@ -23,13 +23,19 @@ library(cowplot)
 library(here)
 ```
 
-# Research question and target audience
+```{css, echo = FALSE}
+.references p {
+  padding-left: 2em;
+  text-indent: -2em;
+}
+```
 
-The doorstroomtoets (the mandatory Dutch primary school transition test for Group 8 pupils) has sparked numerous debates about equal opportunities in education. This motivated government officials to launch a new doorstroomtoets (transfer test) in 2023 (Current Debates and Reforms, 2026), with the hope that a newly devised test would improve access to higher education for pupils from less privileged backgrounds. It is therefore important to understand whether, under this new test, schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their pupils are.
+## Research question and audience
 
-This project adopts an inferential approach: the goal is not to predict the advice of individual schools, but to test whether a school’s disadvantage is related to its advice. The research question is: “Do schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their student population is?” This is tested with two hypotheses:
+The doorstroomtoets (the mandatory Dutch primary school transition test for Group 8 pupils) has sparked numerous debates about equal opportunities in education. This motivated government officials to launch a new doorstroomtoets in 2023 (European Education and Culture Executive Agency, 2026), with the hope that a newly devised test would improve access to higher education for pupils from less privileged backgrounds. This report therefore asks: Do schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their student population is? This project adopts an inferential approach: the goal is not to predict the advice of individual schools, but to test whether a school’s disadvantage is related to its advice. This is tested with two hypotheses:
 
 H1: At the same test results, schools with more disadvantaged pupils (a higher schoolweging) advise a smaller share of pupils to HAVO or higher.
+
 H2: This gap is larger at higher test results.
 
 The target audience is education policymakers, such as staff at the Ministry of Education (OCW). They know the debate about fair school advice but are not statistical experts, so the visualization avoids statistical jargon and uses simple wording.
@@ -52,7 +58,11 @@ model_data <- school_rq3 |>
   )
 ```
 
-# Exploratory process
+## Exploratory process
+
+**Figure 1**
+
+*Test results and school disadvantage per subject (A) and by test provider (B)*
 
 ```{r exploratory-plots, fig.width = 15, fig.height = 6.5, out.width = "100%"}
 # ---- Plot A: test results by school disadvantage, per subject (Sophie) ----
@@ -226,21 +236,21 @@ plot_grid(
 )
 ```
 
-Plot A shows that all three subjects decline with schoolweging in a similar way and correlate moderately, which is why they were combined into one average score; the extreme values of 0% and 100% (black circles) come mostly from small schools, which is why we selected schools with at least 10 pupils. Plot B shows that schools using different test providers have similar levels of disadvantage, while the share of pupils reaching the target level differs between tests, which is why test provider is included as a control.
+Plot A shows that all three subjects decline with schoolweging in a similar way and correlate moderately, which is why they were combined into one average score. The extreme values of 0% and 100% (black circles) come mostly from small schools, so only schools with at least 10 advised pupils were selected. Plot B shows that schools using different test providers have similar levels of disadvantage. However, the share of pupils reaching the target level differs between tests (not shown), so the analysis compares schools that used the same test (i.e. a control for test provider).
 
-# Data and preparation
+## Data and preparation
 
 Using the DUO doorstroomtoets data, this analysis combines all four DUO files for school year 2024–2025, aggregated to one row per school and joined. Only regular primary schools were kept. The outcome is the percentage of pupils with a HAVO, HAVO/VWO or VWO advice, out of all pupils with an advice on the PRO–VWO scale (VSO and “no advice possible” were excluded). This outcome is referred to as HAVO or higher. A percentage was preferred over an average advice score because it is easier for policymakers to interpret.
 
-Test results are the average percentage of pupils reaching the target level (1S for maths, 2F for reading and language). They are combined since exploratory findings showed that the three subjects correlated moderately at school level (r = 0.57–0.68) and declined with schoolweging in a similar way. Each school’s test provider is the test taken by most of its pupils.Test provider (the test taken by most pupils) was included as a control, since exploratory findings showed that the share of pupils reaching the target level differs between tests. Schools missing from any of the four files were removed, as were schools with fewer than 10 advised pupils, because in such small groups a single pupil shifts the percentage by more than 10 points. The final sample contains 5,718 schools.
+Test results are the average percentage of pupils reaching the target level (1S for maths, 2F for reading and language). The three subjects correlate moderately at school level (r = 0.57—0.68) Each school’s test provider is the test taken by most of its pupils. Schools missing from any of the four files were removed, as were schools with fewer than 10 advised pupils, because in such small groups a single pupil shifts the percentage by more than 10 points. The final sample contains 5,718 schools.
 
 The data were analysed with a linear regression of HAVO or higher on test results, schoolweging and their interaction, controlling for test provider. Schools were weighted by their number of advised pupils, as percentages of small schools are less reliable. Test results and schoolweging were centred on their mean, so the schoolweging effect describes a school with average test results; this does not change the model’s predictions.
 
 DUO hides counts below 5 as ‘<5’; these were replaced with 2.5, the midpoint of 1–4, and tested in the robustness checks.
 
-# Model 
+## Model 
 
-```{r}
+```{r include = FALSE}
 # Weighted by n_advised: percentages of larger schools are more reliable
 rq3_model <- lm(
   pct_havo_plus ~ score_c * schoolweging_c + provider,
@@ -257,9 +267,7 @@ Controlling for test provider, schools with higher test results advise more pupi
 
 The interaction is also negative and significant (−0.033, 95% CI: −0.037 to −0.028, p < 0.001): the positive relationship between test results and advice becomes weaker as schoolweging increases. The gap therefore grows with test results: it is small among low-scoring schools and largest among high-scoring ones. This supports H2. Together, the predictors explain about two thirds of the differences in advice between schools (R² = 0.66).
 
-# Plot preparation:
-
-```{r}
+```{r plot-preparation}
 
 # geom_smooth() cannot draw trend lines from our own model. So we let the
 # model predict % HAVO+ advice across all scores, for a LIB school, at low,
@@ -314,7 +322,11 @@ line_labels <- pred_grid |>
 
 ```
 
-# Final explanatory visualization
+## Final Explanatory visualization
+
+**Figure 2**
+
+*Predicted HAVO-or-higher advice by test results for advantaged, average and disadvantaged schools*
 
 ```{r final-plot, fig.width = 11, fig.height = 7.5, out.width = "100%"}
 # Legend labels sit slightly inside the bar ends, so they don't stick out
@@ -449,9 +461,9 @@ final_plot
 
 ```
 
-Each dot is one school, placed by its test result (x-axis) and its share of pupils advised HAVO-or-higher (y-axis), and coloured by schoolweging from yellow-green (advantage) to dark purple (disadvantage). The three lines show the model's predicted advice for schools at the 10th, 50th, and 90th percentile of schoolweging, with shaded 95% confidence intervals. The orange arrow marks the main finding: at an average test result, a disadvantaged school advises 17 fewer pupils per 100 to HAVO or higher than an advantaged school. The lines fan out to the right: the gap is small at low test results and largest at high test results.
+Each dot is one school, placed by its test result (x-axis) and its share of pupils advised HAVO or higher (y-axis), and coloured by schoolweging from yellow-green (advantaged) to dark purple (disadvantaged). The three lines show the model's predicted advice for schools at the 10th, 50th, and 90th percentile of schoolweging, with shaded 95% confidence intervals. The orange arrow marks the main finding: at an average test result, a disadvantaged school advises 17 fewer pupils per 100 to HAVO or higher than an advantaged school. The lines fan out to the right: the gap is small at low test results and largest at high test results.
 
-# Robustness check
+## Robustness check
 
 ```{r robustness}
 # Each robustness model changes one choice; the schoolweging effect (H1)
@@ -532,25 +544,25 @@ knitr::kable(
 )
 ```
 
-The findings are robust. Both the schoolweging effect and the interaction remain negative and significant when using maths results only, when measuring advice as an average on a 1–6 scale, and when excluding the two smallest providers. Replacing “<5” with the most extreme values (1 or 4) changes only the strength of the effects, not their direction or significance. 
+The findings are robust. Both the schoolweging effect and the interaction remain negative and significant when using maths results only, when measuring advice as an average on a 1—6 scale, and when excluding the two smallest providers. Replacing “<5” with the most extreme values (1 or 4) changes only the strength of the effects, not their direction or significance. 
 
-# Conclusion 
+## Conclusion 
 
-Schools with similar test results do not give similar advice. At the same test result, schools with more disadvantaged pupils advise fewer pupils to HAVO or higher and the gap grows as test results rise. For policymakers, this indicates that first, pupils in disadvantaged schools may be under-advised compared with similar pupils elsewhere, yet this is exactly the inequality the 2023 doorstroomtoets was meant to reduce. Second, the gap is largest for high-scoring schools which means the pupils most likely to miss out on access to higher education are the ones who perform well at disadvantaged schools.
+Schools with similar test results do not give similar advice. At the same test result, schools with more disadvantaged pupils advise fewer pupils to HAVO or higher and the gap grows as test results rise. For policymakers, this indicates that, first, pupils in disadvantaged schools may be under-advised compared with similar pupils elsewhere. Second, the gap is largest for high-scoring schools which means the pupils most likely to miss out on access to higher education are the ones who perform well at disadvantaged schools.
 
 ## Limitations and future work
 
-The data are school-level aggregates, so the analysis cannot show whether individual pupils with the same result receive different advice. Also, the model is not causal: the gap could reflect teachers' prejudices, or information about pupils that the test does not capture. Moreover, since 2024 schools give their advice before the test and can only adjust it upwards, so advice partly precedes the results. Future work could use pupil-level data and examine which components of schoolweging (e.g. parental education) drive the gap.
+The data are school-level aggregates, so the analysis cannot show whether individual pupils with the same result receive different advice. Also, the model is not causal so the gap could reflect teachers' prejudices, or information about pupils that the test does not capture. Moreover, since 2024 schools give their advice before the test and can only adjust it upwards, so advice partly precedes the results. Future work could use pupil-level data and examine which components of schoolweging (e.g. parental education) drive the gap.
 
-# AI use
+## AI use
 
-The group used Clause Opus 5.5 and Clausde Sonnet 4.6. AI was used for technical tasks: R syntax, the data-inspection and data-cleaning code, and design suggestion for the final explanatory plot. It was also used to set up the report structure and reduce the word count. The research question, hypotheses, choice of model, interpretation of the results and the content of the report were done without AI because… The AI worked from the assignment brief, a codebook, and our internally developed AI guidelines which governed how the AI…. and ensured accuracy, security, sovereignty and meaning in its outputs. The outputs were checked by peer review. These checks mattered because during the data cleaning phase, it left out the 2f language test result column. This was caught by a peer and was rectified before proceeding with the explanatory analysis.
+The group used Claude Opus 5.5 and Claude Sonnet 4.6. AI was used for technical tasks: R syntax, the data-inspection and data-cleaning code, and design suggestion for the final explanatory plot. It was also used to set up the report structure and reduce the word count. The research question, hypotheses, choice of model, interpretation of the results and the content of the report were done without AI to maintain academic and professional honesty. The AI worked from the assignment brief, a codebook, and our internally developed AI guidelines which governed how the AI operated which  ensured accuracy, security, sovereignty and meaning in its outputs. The outputs were checked by peer review. These checks mattered because during the data cleaning phase, it left out the 2f language test result column. This was caught by a peer and was rectified before proceeding with the explanatory analysis. The key takeaway was that AI is a fantastic tool but a critical lens is required.
 
-# References
+## References
 
-- Change to APA guidelines
-Current debates and reforms. (2026). Europa.Eu. https://national-policies.eacea.ec.europa.eu/youthwiki/chapters/netherlands/311-current-debates-and-reforms
-
+::: {.references}
+European Education and Culture Executive Agency. (2026). *Current debates and reforms: Netherlands*. Youth Wiki. https://national-policies.eacea.ec.europa.eu/youthwiki/chapters/netherlands/311-current-debates-and-reforms
+:::
 
 
 
