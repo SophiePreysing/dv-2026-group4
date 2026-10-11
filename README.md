@@ -53,4 +53,4 @@ RStudio opens the project, with a `Git` tab next to your `Environment` pane. Ful
 1. Open the project in RStudio (double-click its `.Rproj` file, or clone it as described above).
 2. Run `scripts/00-packages.R` to install and load the packages this project uses.
 3. Run `scripts/01-get-data.R` once to download the data into `data/raw/`.
-4. Knit `report/DV-Assignment2-Final-Report.Rmd` (the final report). If the cleaned data does not exist yet, knitting builds it first by running `scripts/03-clean-data.R`.
+4. Knit `report/DV-Assignment2-Final-Report.Rmd` (the final report). Kitting builds the cleaned data first by running `scripts/03-clean-data.R`.
