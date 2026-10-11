@@ -1,4 +1,23 @@
-# AI use guidelines (team)
+# AI context and team guidelines
+
+## Project context (paste this at the start of every AI session)
+
+**Research question (RQ3):** Do schools with similar test results give similar secondary-school advice, regardless of how disadvantaged their pupil population is?
+
+- H1: At the same test results, schools with a higher schoolweging advise a smaller share of pupils to HAVO or higher.
+- H2: This gap is larger at higher test results.
+
+**Level:** inference. **Audience:** education policymakers (e.g. Ministry of Education staff), not statistical experts.
+
+**Data:** DUO open data for 2024–2025 (`eindscores`, `referentieniveaus`, `schooladviezen`) plus the Inspectorate's `schoolweging`. Codebook: [The DUO Data: Background & Codebook](https://ann1ejohansson.github.io/data-visualization-2026/documents/data-resources.html). One row = one school location, not one pupil.
+
+**Key variables (in `school_rq3`):**
+
+- `pct_havo_plus`: % of pupils with a HAVO, HAVO/VWO or VWO advice, out of all pupils with a PRO–VWO advice (outcome)
+- `score`: average % of pupils reaching the target level in maths (1S), reading (2F) and language (2F)
+- `schoolweging`: school disadvantage, roughly 20–40; higher = more disadvantaged
+- `provider`: the test provider used by most of the school's pupils
+- `n_advised`: number of pupils with a PRO–VWO advice (used as weight)
 
 ## 1. Context: always give the AI
 
@@ -14,9 +33,11 @@ Keep `ai-context.md` in the repo root and paste or attach it at the start of eve
   - `referentieniveaus` contains only Bo schools.
   - `schoolweging` joins via `OVT` (`INSTELLINGSCODE|location`).
 - **Decisions already made**:
-  - How we handle `"<5"`: 2.5, with a sensitivity check using 1 and 4.
-  - How "provider" is defined: the provider with the most students per school.
-  - Whether results are weighted by students or by schools.
+  - `"<5"` is replaced by 2.5, with a sensitivity check using 1 and 4.
+  - "Provider" is the provider with the most students per school.
+  - Models are weighted by the number of advised pupils (`n_advised`).
+  - Only regular primary schools (Bo) with 10+ advised pupils that appear in all four files are kept.
+  - Test results and schoolweging are centred on their mean; LIB is the reference provider.
 - **Code style**: tidyverse, native pipe `|>`, lintr defaults, data read from `data/raw/` (never edited by hand), relative paths only.
 
 **Never put in the context file or in a prompt:**
