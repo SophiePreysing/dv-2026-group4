@@ -22,7 +22,13 @@
 
 ## About this project
 
-This project uses DUO's 2024–2025 doorstroomtoets data to examine how closely the secondary-school advice that primary schools give their groep 8 pupils matches those pupils' test results. For each school, we compare the proportion of pupils receiving XYZ advice (TBC) to the proportion reaching the higher reference levels in maths (1S), reading (2F) and language (2F). We then test whether this relationship depends on the school's schoolweging, the Education Inspectorate's measure of how disadvantaged its pupil population is. With our final visualization, we want to show whether two schools with similar test results give similar advice regardless of who their pupils are, or whether schools with more disadvantaged populations systematically advise lower tracks. Answering this speaks directly to the current public debate about fairness in the transition to secondary education.
+This project uses DUO's 2024–2025 doorstroomtoets data for about 5,700 regular primary schools to examine how closely the secondary-school advice that schools give their groep 8 pupils matches those pupils' test results.
+
+For each school, we relate the share of pupils advised **HAVO or higher** to the school's **test results**: the average share of pupils reaching the national target level in maths (1S), reading (2F) and language (2F). We then test whether this relationship depends on the school's **schoolweging**, the Education Inspectorate's measure of how disadvantaged its pupil population is. We use a weighted linear regression with an interaction between test results and schoolweging, controlling for test provider.
+
+Our final visualization shows whether two schools with similar test results give similar advice regardless of who their pupils are. It doesn't: at the same test results, schools with more disadvantaged pupils advise fewer pupils to HAVO or higher (about 17 fewer per 100 at an average test result), and this gap grows as test results rise. The finding holds across several robustness checks, but it is based on school-level data and shows an association, not a cause.
+
+This speaks directly to the current public debate about fairness in the transition to secondary education.
 
 ## Cloning this project
 
@@ -39,4 +45,4 @@ RStudio opens the project, with a `Git` tab next to your `Environment` pane. Ful
 1. Open the project in RStudio (double-click its `.Rproj` file, or clone it as described above).
 2. Run `scripts/00-packages.R` to install and load the packages this project uses.
 3. Run `scripts/01-get-data.R` once to download the data into `data/raw/`.
-4. Knit `report/DV-Assignment2-Part2-GroupX.Rmd` (the final report). Knitting runs both scripts above for you.
+4. Knit `report/DV-Assignment2-Final-Report.Rmd` (the final report). If the cleaned data does not exist yet, knitting builds it first by running `scripts/03-clean-data.R`.
