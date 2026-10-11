@@ -56,7 +56,7 @@ school_rq3 <- readRDS(data_path)
 
 *Test results, school disadvantage and test provider (A–C)*
 
-```{r exploratory-plots, fig.width = 21, fig.height = 6.5, out.width = "100%"}
+```{r exploratory-plots, fig.width = 14, fig.height = 10, out.width = "100%"}
 # ---- Plot A: test results by school disadvantage, per subject ----
 
 school_rq3_long <- school_rq3 |>
@@ -69,7 +69,8 @@ school_rq3_long <- school_rq3 |>
     c("Maths (1S)", "Reading (2F)", "Language (2F)"),
     names_to = "subject",
     values_to = "test_score"
-  )
+  ) |>
+  filter(!is.na(schoolweging), !is.na(test_score))
 
 # Schools with extreme scores (0% or 100%), mostly small schools
 extreme_scores <- school_rq3_long |>
@@ -81,15 +82,15 @@ subject_colours <- c(
   "Language (2F)" = "#009E73"
 )
 
-plot_2 <- school_rq3_long |>
-  filter(!is.na(schoolweging), !is.na(test_score)) |>
-  ggplot(aes(x = schoolweging, y = test_score, colour = subject)) +
+plot_2 <- ggplot(
+  school_rq3_long,
+  aes(x = schoolweging, y = test_score, colour = subject)
+) +
   # Background observations
   geom_point(alpha = 0.06, size = 0.7) +
   # Highlight schools with extreme percentages
   geom_point(
-    data = extreme_scores |>
-      filter(!is.na(schoolweging), !is.na(test_score)),
+    data = extreme_scores,
     shape = 21,
     fill = NA,
     colour = "grey25",
@@ -220,11 +221,11 @@ plot_3 <- ggplot(
     plot.subtitle = element_text(colour = "grey35", margin = margin(b = 12)),
     axis.text = element_text(size = 11),
     axis.title.y = element_text(size = 12),
-    legend.position = "top",
-    legend.justification = "left"
+    # Same legend as plot C, which is shown directly below
+    legend.position = "none"
   )
 
-# ---- Plot C: test results by test provider ----
+# ---- Plot C: test results by test provider (one value per school) ----
 
 nat_median_score <- median(school_rq3$score, na.rm = TRUE)
 
@@ -277,8 +278,9 @@ plot_4 <- ggplot(
     x = NULL,
     y = "Pupils reaching target level",
     caption = paste(
-      "Populations are similar (Plot B), so the same score may mean",
-      "something different per test."
+      "Populations are similar (Plot B), so these differences likely",
+      "reflect the tests rather than the pupils.",
+      "\nDashed line in B and C: national median."
     )
   ) +
   theme_minimal(base_size = 12) +
@@ -294,15 +296,29 @@ plot_4 <- ggplot(
     )
   )
 
-# ---- Combine ----
+# ---- Combine: A on the left, B and C stacked on the right ----
 
 plot_grid(
-  plot_2, plot_3, plot_4,
-  labels = c("A", "B", "C"),
+  plot_2,
+  plot_grid(
+    plot_3, plot_4,
+    labels = c("B", "C"), label_size = 14, ncol = 1
+  ),
+  labels = c("A", ""),
   label_size = 14,
-  nrow = 1
+  ncol = 2,
+  rel_widths = c(1.1, 1)
 )
+```
 
+```{r provider-score-test, include = FALSE}
+# Do test results differ between providers? Supports the choice to
+# control for provider (LIB as reference; unweighted, descriptive)
+provider_score_model <- school_rq3 |>
+  mutate(provider = relevel(factor(provider), ref = "LIB")) |>
+  lm(score ~ provider, data = _)
+
+summary(provider_score_model)
 ```
 
 ```{r provider-score-test, include = FALSE}
