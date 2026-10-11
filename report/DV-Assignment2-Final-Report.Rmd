@@ -321,17 +321,6 @@ provider_score_model <- school_rq3 |>
 summary(provider_score_model)
 ```
 
-```{r provider-score-test, include = FALSE}
-
-# Do test results differ between providers? Supports the choice to
-# control for provider (LIB as reference; unweighted, descriptive)
-
-provider_score_model <- school_rq3 |>
-  mutate(provider = relevel(factor(provider), ref = "LIB")) |>
-  lm(score ~ provider, data = _)
-
-```
-
 Plot A shows that all three subjects decline similarly with schoolweging and correlate moderately (r = 0.57—0.68), so they were combined into one average score. Plot B shows that schools using different test providers have similar levels of disadvantage. Plot C shows that the share of pupils reaching the target level differs between tests (LIB schools average 58.6%; schools using other tests score 5.8–9.4 percentage points lower, all p < 0.01), so the analysis controls for test provider.
 
 ## Data and preparation
