@@ -1,10 +1,3 @@
----
-title: "ai-context.md"
-author: "Sophie"
-date: "2026-10-02"
-output: html_document
----
-
 # AI use guidelines (team)
 
 ## 1. Context: always give the AI
