@@ -32,7 +32,7 @@ This speaks directly to the current public debate about fairness in the transiti
 
 ## AI guidelines
 
-Our team guidelines for using AI are in [`ai-context.Rmd`](ai-context.Rmd). In short:
+Our team guidelines for using AI are in [`ai-context.md`](ai-context.md). In short:
 
 - **Context:** every AI session starts with our research question, the codebook, known data quirks (e.g. `"<5"` counts, one row per school), the decisions we have already made, and our code style. We never share passwords, personal data or non-public data.
 - **Constraints:** the AI must ask before making any data decision we haven't made yet, must not compare raw scores across providers, make claims about individual pupils or use causal language, and must list every transformation, filter and assumption it uses.
