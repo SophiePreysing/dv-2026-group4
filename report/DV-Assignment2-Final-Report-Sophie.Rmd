@@ -2,7 +2,7 @@
 title: "Fair Advice After the Doorstroomtoets? School Disadvantage and Secondary-School Advice"
 subtitle: "DV Assignment – Final report"
 author: "Group 4: Sander van Nieuwenhuijzen, Sophie Preysing, Natasha Medved"
-date: "October 2026"
+date: "11-10-2026"
 output:
   html_document:
     toc: true
@@ -206,7 +206,7 @@ plot_3 <- ggplot(
   guides(fill = "none", colour = "none") +
   labs(
     title = "School disadvantage by primary test provider",
-    subtitle = subtitle = paste(
+    subtitle = paste(
       "Higher schoolweging indicates a more disadvantaged",
       "student population"
     ),
@@ -224,15 +224,103 @@ plot_3 <- ggplot(
     legend.justification = "left"
   )
 
+# National median per subject (for the dashed reference line)
+nat_median_all <- median(school_rq3_long$test_score, na.rm = TRUE)
+
+plot_4 <- ggplot(school_rq3_long, aes(x = provider, y = test_score, fill = provider)) +
+  
+  # National median
+  geom_hline(
+    aes(yintercept = nat_median_all, linetype = "National median"),
+    colour = "grey40",
+    linewidth = 0.5
+  ) +
+  
+  # Full distribution
+  geom_violin(alpha = 0.3,
+              linewidth = 0,
+              colour = NA) +
+  
+  # Median and quartiles
+  geom_boxplot(
+    aes(linetype = "Provider median"),
+    alpha = 0.8,
+    width = 0.3,
+    outlier.shape = NA,
+    colour = "grey20",
+    linewidth = 0.6,
+    key_glyph = "path"
+  ) +
+  scale_fill_manual(values = provider_colours) +
+  scale_linetype_manual(
+    name = NULL,
+    values = c("Provider median" = "solid", "National median" = "dashed"),
+    breaks = c("Provider median", "National median"),
+    guide = guide_legend(
+      override.aes = list(
+        colour = "grey20",
+        linewidth = 0.6,
+        alpha = 1,
+        fill = NA
+      )
+    )
+  ) +
+  scale_x_discrete(labels = setNames(provider_n$label, provider_n$provider)) +
+  scale_y_continuous(
+    breaks = seq(0, 100, 20),
+    labels = function(x)
+      paste0(x, "%")
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  guides(fill = "none") +
+  
+  labs(
+    title    = "Share of students reaching the target level, by test provider",
+    subtitle = "Each observation is a school, and pooled score of math, language and reading ",
+    x        = NULL,
+    y        = "Students reaching target level",
+    caption  = paste(
+      "Box: median and quartiles. Violin: distribution across schools.",
+      "Providers use different tests, so differences do not show that one test is easier or harder.",
+      sep = "\n"
+    )
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title         = element_text(face = "bold", size = 14),
+    plot.subtitle      = element_text(
+      colour = "grey35",
+      size = 11,
+      margin = margin(b = 10)
+    ),
+    strip.text         = element_text(face = "bold", size = 11),
+    axis.text.x        = element_text(size = 9),
+    axis.text.y        = element_text(size = 10),
+    axis.title.y       = element_text(size = 12, margin = margin(r = 10)),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.position    = "top",
+    legend.justification = "left",
+    plot.caption       = element_text(
+      hjust = 0,
+      colour = "grey40",
+      size = 9,
+      lineheight = 1.15,
+      margin = margin(t = 12)
+    )
+  )
+
 # ---- Combine ----
 
 plot_grid(
   plot_2,
   plot_3,
-  labels = c("A", "B"),
+  plot_4,
+  labels = c("A", "B", "C"),
   label_size = 14,
   ncol = 2
 )
+
 ```
 
 ```{r provider-score-test, include = FALSE}
@@ -246,7 +334,7 @@ provider_score_model <- school_rq3 |>
 
 ```
 
-Plot A shows that all three subjects decline similarly with schoolweging and correlate moderately (r = 0.57—0.68), so they were combined into one average score. Plot B shows that schools using different test providers have similar levels of disadvantage. However, the share of pupils reaching the target level differs between tests (LIB schools average 58.6%; schools using other tests score 5.8–9.4 percentage points lower, all p < 0.01), so the analysis controls for test provider.
+Plot A shows that all three subjects decline similarly with schoolweging and correlate moderately (r = 0.57—0.68), so they were combined into one average score. Plot B shows that schools using different test providers have similar levels of disadvantage. Plot C show that the share of pupils reaching the target level differs between tests (LIB schools average 58.6%; schools using other tests score 5.8–9.4 percentage points lower, all p < 0.01), so the analysis controls for test provider.
 
 ## Data and preparation
 

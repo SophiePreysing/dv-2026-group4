@@ -220,12 +220,99 @@ plot_3 <- ggplot(school_rq3,
     legend.justification = "left"
   )
 
+# National median per subject (for the dashed reference line)
+nat_median_all <- median(school_rq3_long$test_score, na.rm = TRUE)
+
+plot_4 <- ggplot(school_rq3_long, aes(x = provider, y = test_score, fill = provider)) +
+  
+  # National median
+  geom_hline(
+    aes(yintercept = nat_median_all, linetype = "National median"),
+    colour = "grey40",
+    linewidth = 0.5
+  ) +
+  
+  # Full distribution
+  geom_violin(alpha = 0.3,
+              linewidth = 0,
+              colour = NA) +
+  
+  # Median and quartiles
+  geom_boxplot(
+    aes(linetype = "Provider median"),
+    alpha = 0.8,
+    width = 0.3,
+    outlier.shape = NA,
+    colour = "grey20",
+    linewidth = 0.6,
+    key_glyph = "path"
+  ) +
+  scale_fill_manual(values = provider_colours) +
+  scale_linetype_manual(
+    name = NULL,
+    values = c("Provider median" = "solid", "National median" = "dashed"),
+    breaks = c("Provider median", "National median"),
+    guide = guide_legend(
+      override.aes = list(
+        colour = "grey20",
+        linewidth = 0.6,
+        alpha = 1,
+        fill = NA
+      )
+    )
+  ) +
+  scale_x_discrete(labels = setNames(provider_n$label, provider_n$provider)) +
+  scale_y_continuous(
+    breaks = seq(0, 100, 20),
+    labels = function(x)
+      paste0(x, "%")
+  ) +
+  coord_cartesian(ylim = c(0, 100)) +
+  guides(fill = "none") +
+  
+  labs(
+    title    = "Share of students reaching the target level, by test provider",
+    subtitle = "Each observation is a school, and pooled score of math, language and reading ",
+    x        = NULL,
+    y        = "Students reaching target level",
+    caption  = paste(
+      "Box: median and quartiles. Violin: distribution across schools.",
+      "Providers use different tests, so differences do not show that one test is easier or harder.",
+      sep = "\n"
+    )
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title         = element_text(face = "bold", size = 14),
+    plot.subtitle      = element_text(
+      colour = "grey35",
+      size = 11,
+      margin = margin(b = 10)
+    ),
+    strip.text         = element_text(face = "bold", size = 11),
+    axis.text.x        = element_text(size = 9),
+    axis.text.y        = element_text(size = 10),
+    axis.title.y       = element_text(size = 12, margin = margin(r = 10)),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.position    = "top",
+    legend.justification = "left",
+    plot.caption       = element_text(
+      hjust = 0,
+      colour = "grey40",
+      size = 9,
+      lineheight = 1.15,
+      margin = margin(t = 12)
+    )
+  )
+
 # ---- Combine ----
 
 plot_grid(
   plot_2,
   plot_3,
-  labels = c("A", "B"),
+  plot_4,
+  labels = c("A", "B", "C"),
   label_size = 14,
   ncol = 2
 )
@@ -542,14 +629,10 @@ knitr::kable(
 The findings are robust. Both the schoolweging effect and the interaction remain negative and significant when using maths results only, when measuring advice as an average on a 1—6 scale, and when excluding the two smallest providers. Replacing “<5” with the most extreme values (1 or 4) changes only the strength of the effects, not their direction or significance. 
 
 ## Conclusion 
-
 Schools with similar test results do not give similar advice. At comparable test results, schools with more disadvantaged pupils advise fewer pupils to HAVO or higher. This gap widens as test results increase.  For policymakers, these findings suggest that primary schools with more socioeconomically disadvantaged populations less often give HAVO-or-higher advice than other primary schools. Populations of schools with high test results and high socio-economic disadvantage are particularly affected. 
 
-## change ??
-this indicates that, first, pupils in disadvantaged schools may be under-advised compared with similar pupils elsewhere. Second, the gap is largest for high-scoring schools which means the pupils most likely to miss out on access to higher education are the ones who perform well at disadvantaged schools.
 
 ## Limitations and future work
-
 The data are school-level aggregates, so the analysis cannot show whether individual pupils with the same result receive different advice. Also, the model is not causal so the gap could reflect teachers' prejudices, or information about pupils that the test does not capture. Moreover, since 2024 schools give their advice before the test and can only adjust it upwards, so advice partly precedes the results. Future work could use pupil-level data and examine which components of schoolweging (e.g. parental education) drive the gap.
 
 ## AI use
